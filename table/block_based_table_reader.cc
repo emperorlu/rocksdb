@@ -710,8 +710,8 @@ Status BlockBasedTable::Open(const ImmutableCFOptions& ioptions,
         s.ToString().c_str());
   } else {
     if (found_range_del_block && !rep->range_del_handle.IsNull()) {
-      ReadOptions read_options;
-      s = MaybeLoadDataBlockToCache(rep, read_options, rep->range_del_handle,
+      ReadOptions read_options_;
+      s = MaybeLoadDataBlockToCache(rep, read_options_, rep->range_del_handle,
                                     Slice() /* compression_dict */,
                                     &rep->range_del_entry);
       if (!s.ok()) {
