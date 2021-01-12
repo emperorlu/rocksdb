@@ -153,7 +153,7 @@ class MixTopStage {
 class BestStage {
  public:
   BestStage(unsigned model_n) {
-    for (int model_i = 0; model_i < model_n; ++model_i) {
+    for (unsigned model_i = 0; model_i < model_n; ++model_i) {
       models.emplace_back();
     }
   }
@@ -199,7 +199,7 @@ class BestStage {
 class LRStage {
  public:
   LRStage(unsigned model_n) {
-    for (int model_i = 0; model_i < model_n; ++model_i) {
+    for (unsigned model_i = 0; model_i < model_n; ++model_i) {
       models.emplace_back();
     }
   }
@@ -343,7 +343,7 @@ struct RMIConfig {
 template <class Weight_T>
 class RMINew {
  public:
-  RMINew(const RMIConfig& config) : config(config) {
+  RMINew(const RMIConfig& config_) : config(config_) {
     assert(config.stage_configs.size() == 2);
     assert(config.stage_configs.front().model_n == 1);
     assert(config.stage_configs[1].model_type ==
