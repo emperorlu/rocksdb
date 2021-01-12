@@ -1747,15 +1747,13 @@ Status BlockBasedTable::ModelGet(const ReadOptions& read_options, const Slice& k
     // }
     Slice nkey (key.data(),8);
     uint64_t lekey = 0;
-    // sscanf(nkey.data(), "%ulld", &lekey);
-    memcpy(&lekey, nkey.data(), sizeof(lekey));
+    sscanf(nkey.data(), "%llu", &lekey);
+    // memcpy(&lekey, nkey.data(), sizeof(lekey));
     auto value_get = rep_->learnedMod->get(lekey);
     int block_num = value_get / 4096;
 
     bool done = false;
-    for (iiter->Seek(key); iiter->Valid() && !done; iiter->Next()) {
-      Slice handle_value = iiter->value();
-
+    do {
       BlockHandle handle(rep_->block_pos[block_num].first, rep_->block_pos[block_num].second);
       bool not_exist_in_filter =
           filter != nullptr && filter->IsBlockBased() == true &&
@@ -1802,7 +1800,7 @@ Status BlockBasedTable::ModelGet(const ReadOptions& read_options, const Slice& k
         // Avoid the extra Next which is expensive in two-level indexes
         break;
       }
-    }
+    }while(0);
     if (s.ok()) {
       s = iiter->status();
     }
