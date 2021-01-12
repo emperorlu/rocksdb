@@ -573,15 +573,7 @@ Status BlockBasedTable::Open(const ImmutableCFOptions& ioptions,
   Rep* rep = new BlockBasedTable::Rep(ioptions, env_options, table_options,
                                       internal_comparator, skip_filters);
   rep->block_pos.clear();
-  BlockIter iiter_on_stack;
-  ReadOptions read_options;
-  auto iiter = NewIndexIterator(read_options, &iiter_on_stack);
-  for (iiter->SeekToFirst(); iiter->Valid(); iiter->Next()) {
-    Slice handle_value = iiter->value();
-    BlockHandle handle;
-    handle.DecodeFrom(&handle_value);
-    rep->block_pos.push_back({handle.offset(),handle.size()});
-  }
+
   // delete iiter;
 
   rep->file = std::move(file);
@@ -710,8 +702,8 @@ Status BlockBasedTable::Open(const ImmutableCFOptions& ioptions,
         s.ToString().c_str());
   } else {
     if (found_range_del_block && !rep->range_del_handle.IsNull()) {
-      ReadOptions read_options_;
-      s = MaybeLoadDataBlockToCache(rep, read_options_, rep->range_del_handle,
+      ReadOptions read_options;
+      s = MaybeLoadDataBlockToCache(rep, read_options, rep->range_del_handle,
                                     Slice() /* compression_dict */,
                                     &rep->range_del_entry);
       if (!s.ok()) {
@@ -719,6 +711,15 @@ Status BlockBasedTable::Open(const ImmutableCFOptions& ioptions,
             rep->ioptions.info_log,
             "Encountered error while reading data from range del block %s",
             s.ToString().c_str());
+      }
+      BlockIter iiter_on_stack;
+      // ReadOptions read_options;
+      auto iiter = NewIndexIterator(read_options, &iiter_on_stack);
+      for (iiter->SeekToFirst(); iiter->Valid(); iiter->Next()) {
+        Slice handle_value = iiter->value();
+        BlockHandle handle;
+        handle.DecodeFrom(&handle_value);
+        rep->block_pos.push_back({handle.offset(),handle.size()});
       }
     }
   }
