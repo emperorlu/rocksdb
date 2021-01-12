@@ -524,8 +524,8 @@ class RMINew {
         // my previous key
         if (i - 1 > 0) {
           // augument the previous model
-          double index_pred = first_stage->predict(uni_keys[i - 1], 0);
-          unsigned next_stage_model_i_1 = pick_next_stage_model(index_pred);
+          double index_pred_ = first_stage->predict(uni_keys[i - 1], 0);
+          unsigned next_stage_model_i_1 = pick_next_stage_model(index_pred_);
 
           if (next_stage_model_i_1 != next_stage_model_i) {
             // augument the data
