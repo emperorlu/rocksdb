@@ -1753,8 +1753,8 @@ Status BlockBasedTable::ModelGet(const ReadOptions& read_options, const Slice& k
     int block_num = value_get / 4096;
 
     bool done = false;
-    // for (iiter->Seek(key); iiter->Valid() && !done; iiter->Next()) {
-    //   Slice handle_value = iiter->value();
+    for (iiter->Seek(key); iiter->Valid() && !done; iiter->Next()) {
+      Slice handle_value = iiter->value();
 
       BlockHandle handle(rep_->block_pos[block_num].first, rep_->block_pos[block_num].second);
       bool not_exist_in_filter =
