@@ -381,7 +381,7 @@ class RMINew {
     return next_stage_model_i;
   }
 
-#endif
+
 
  private:
   const RMIConfig config;
@@ -402,7 +402,7 @@ class RMINew {
   LRStage* first_stage;
   LRStage* second_stage;
 };
-
+#endif
 /*
 template <class Weight_T>
 class RMIMixTop {
