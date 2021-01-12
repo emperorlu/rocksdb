@@ -114,7 +114,7 @@ class BlockBasedTable : public TableReader {
              GetContext* get_context, bool skip_filters = false) override;
   
   Status ModelGet(const ReadOptions& read_options, const Slice& key,
-              GetContext* get_context, bool skip_filters) override;
+              GetContext* get_context, bool skip_filters = false);
 
   // Pre-fetch the disk blocks that correspond to the key range specified by
   // (kbegin, kend). The call will return error status in the event of
