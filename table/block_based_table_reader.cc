@@ -1801,9 +1801,6 @@ Status BlockBasedTable::ModelGet(const ReadOptions& read_options, const Slice& k
         break;
       }
     }while(0);
-    if (s.ok()) {
-      s = iiter->status();
-    }
   }
 
   // if rep_->filter_entry is not set, we should call Release(); otherwise
