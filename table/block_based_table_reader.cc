@@ -1676,7 +1676,8 @@ Status BlockBasedTable::Get(const ReadOptions& read_options, const Slice& key,
         break;
       } else {
         BlockIter biter;
-        NewDataBlockIterator(rep_, read_options, handle, &biter, true, s);
+        //>
+        NewDataBlockIterator(rep_, read_options, handle, &biter);
 
         if (read_options.read_tier == kBlockCacheTier &&
             biter.status().IsIncomplete()) {
@@ -1747,8 +1748,8 @@ Status BlockBasedTable::ModelGet(const ReadOptions& read_options, const Slice& k
     // }
     Slice nkey (key.data(),8);
     uint64_t lekey = 0;
-    sscanf(nkey.data(), "%llu", &lekey);
-    // memcpy(&lekey, nkey.data(), sizeof(lekey));
+    // sscanf(nkey.data(), "%llu", &lekey);
+    memcpy(&lekey, nkey.data(), sizeof(lekey));
     auto value_get = rep_->learnedMod->get(lekey);
     int block_num = value_get / 4096;
 
@@ -1767,7 +1768,7 @@ Status BlockBasedTable::ModelGet(const ReadOptions& read_options, const Slice& k
         break;
       } else {
         BlockIter biter;
-        NewDataBlockIterator(rep_, read_options, handle, &biter, s);
+        NewDataBlockIterator(rep_, read_options, handle, &biter, false, s);
 
         if (read_options.read_tier == kBlockCacheTier &&
             biter.status().IsIncomplete()) {
