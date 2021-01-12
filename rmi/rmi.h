@@ -15,8 +15,6 @@
 
 #define LRfirst
 #define AUG
-
-#if !defined(RMI_H)
 #define RMI_H
 
 #ifndef unlikely
