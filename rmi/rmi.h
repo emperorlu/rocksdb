@@ -15,6 +15,8 @@
 
 #define LRfirst
 #define AUG
+
+#if !defined(RMI_H)
 #define RMI_H
 
 #ifndef unlikely
@@ -24,7 +26,7 @@
 class LRStage {
  public:
   LRStage(unsigned model_n) {
-    for (int model_i = 0; model_i < model_n; ++model_i) {
+    for (unsigned model_i = 0; model_i < model_n; ++model_i) {
       models.emplace_back();
     }
   }
@@ -379,7 +381,7 @@ class RMINew {
     return next_stage_model_i;
   }
 
-
+#endif
  private:
   const RMIConfig config;
 
