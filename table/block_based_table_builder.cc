@@ -283,11 +283,11 @@ struct BlockBasedTableBuilder::Rep {
       const CompressionOptions& _compression_opts,
       const std::string* _compression_dict, const bool skip_filters,
       const std::string& _column_family_name)
-      : ioptions(_ioptions),
+      : _bytes(0),
+        ioptions(_ioptions),
         table_options(table_opt),
         internal_comparator(icomparator),
         file(f),
-        _bytes(0),
         data_block(table_options.block_restart_interval,
                    table_options.use_delta_encoding),
         range_del_block(1),  // TODO(andrewkr): restart_interval unnecessary
