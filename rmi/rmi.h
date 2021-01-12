@@ -622,6 +622,7 @@ class RMINew {
     return next_stage_model_i;
   }
 #endif
+
   std::vector<double> all_keys;  // not valid after calling finish_insert
   std::vector<std::pair<double, double>> all_values;
   std::vector<learned_addr_t>
@@ -633,18 +634,11 @@ class RMINew {
   unsigned key_n;
 
   double first_stage_pred_max, first_stage_pred_min;
-
-#ifdef LRfirst
   LRStage* first_stage;
-#elif defined(BestModel)
-BestStage* first_stage;
-#else
-NNStage<Weight_T>* first_stage;
-#endif
   LRStage* second_stage;
 
-  private:
-    const RMIConfig config;
+ private:
+  const RMIConfig config;
 };
 
 /*
