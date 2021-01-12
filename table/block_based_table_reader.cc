@@ -574,14 +574,15 @@ Status BlockBasedTable::Open(const ImmutableCFOptions& ioptions,
                                       internal_comparator, skip_filters);
   rep->block_pos.clear();
   BlockIter iiter_on_stack;
-  auto iiter = NewIndexIterator(ioptions, &iiter_on_stack);
+  ReadOptions read_options;
+  auto iiter = NewIndexIterator(read_options, &iiter_on_stack);
   for (iiter->SeekToFirst(); iiter->Valid(); iiter->Next()) {
     Slice handle_value = iiter->value();
     BlockHandle handle;
     handle.DecodeFrom(&handle_value);
     rep->block_pos.push_back({handle.offset(),handle.size()});
   }
-  delete iiter;
+  // delete iiter;
 
   rep->file = std::move(file);
   rep->footer = footer;
