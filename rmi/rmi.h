@@ -32,9 +32,9 @@ class MixTopStage {
  public:
   MixTopStage(int feat_n, int out_n, int width, int depth,
               std::string weight_dir,
-              std::vector<std::pair<double, double>> nn_ranges)
+              std::vector<std::pair<double, double>> nn_ranges_)
       : nn(NN<Weight_T>(feat_n, out_n, width, depth, weight_dir)),
-        nn_ranges(nn_ranges) {
+        nn_ranges(nn_ranges_) {
     // sanity chekc the nn_ranges
     struct myclass {
       bool operator()(std::pair<double, double> i,

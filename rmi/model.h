@@ -210,8 +210,8 @@ class LinearRegression {
 template <class Weight_T>
 class NN {
  public:
-  NN(int feat_n, int out_n, int width, int depth, std::string weight_dir)
-      : feat_n(feat_n), out_n(out_n), width(width), depth(depth) {
+  NN(int feat_n_, int out_n_, int width_, int depth_, std::string weight_dir)
+      : feat_n(feat_n_), out_n(out_n_), width(width_), depth(depth_) {
     feat_in =
         (Weight_T *)mkl_malloc(feat_n * sizeof(Weight_T), MKL_MALLOC_ALIGN);
     int next_input_size = feat_n;
