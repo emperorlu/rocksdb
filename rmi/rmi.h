@@ -16,10 +16,6 @@
 #define LRfirst
 #define AUG
 
-#if !defined(COUT_THIS)
-#define COUT_THIS(this) std::cerr << this << std::endl
-#endif  // COUT_THIS
-
 #if !defined(RMI_H)
 #define RMI_H
 
@@ -350,7 +346,7 @@ class RMINew {
            RMIConfig::StageConfig::LinearRegression);
     // printf("rmi init with model num: %u\n", config.stage_configs[1].model_n);
 #ifdef EVENLY_ASSIGN
-    COUT_THIS("RMI use new-dispatch!");
+    // COUT_THIS("RMI use new-dispatch!");
 #else
     // COUT_THIS("RMI use original-dispatch!");
 #endif
