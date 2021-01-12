@@ -38,7 +38,7 @@ set(MKL_LINK_DIRECTORY "/opt/intel/mkl/lib/intel64")
 set(MKL_INCLUDE_DIRECTORY "/opt/intel/mkl/include")
 link_directories(${MKL_LINK_DIRECTORY})
 include_directories(${MKL_INCLUDE_DIRECTORY})
-
+option(WITH_SNAPPY "build with SNAPPY" ON)
 option(WITH_GFLAGS "build with GFlags" ON)
 if(WITH_GFLAGS)
   find_package(gflags REQUIRED)
