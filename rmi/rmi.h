@@ -379,10 +379,10 @@ class RMINew {
     second_stage = new LRStage(second);
   }
 
-  RMINew(const std::vector<std::string>& first, const RMIConfig& config) {
+  RMINew(const std::vector<std::string>& first, const RMIConfig& config_) {
     first_stage = new LRStage(first);
     // printf("second stage num %d\n", config.stage_configs[1].model_n);
-    second_stage = new LRStage(config.stage_configs[1].model_n);
+    second_stage = new LRStage(config_.stage_configs[1].model_n);
   }
 
   RMINew(const std::string& stages, const RMIConfig& config) {
