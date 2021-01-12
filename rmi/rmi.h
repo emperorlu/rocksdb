@@ -594,7 +594,7 @@ class RMINew {
     second_stage->predict_last(key, pos,next_stage_model_i);
   }
 
- public:
+//  public:
   inline unsigned pick_model_for_key(double key) {
     double index_pred = first_stage->predict(key, 0);
     return pick_next_stage_model(index_pred);
