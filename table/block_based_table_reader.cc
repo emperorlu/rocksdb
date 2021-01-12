@@ -712,15 +712,6 @@ Status BlockBasedTable::Open(const ImmutableCFOptions& ioptions,
             "Encountered error while reading data from range del block %s",
             s.ToString().c_str());
       }
-      BlockIter iiter_on_stack;
-      // ReadOptions read_options;
-      auto iiter = NewIndexIterator(read_options, &iiter_on_stack);
-      for (iiter->SeekToFirst(); iiter->Valid(); iiter->Next()) {
-        Slice handle_value = iiter->value();
-        BlockHandle handle;
-        handle.DecodeFrom(&handle_value);
-        rep->block_pos.push_back({handle.offset(),handle.size()});
-      }
     }
   }
 
@@ -805,6 +796,15 @@ Status BlockBasedTable::Open(const ImmutableCFOptions& ioptions,
   if (s.ok()) {
     *table_reader = std::move(new_table);
   }
+  BlockIter iiter_on_stack;
+  auto iiter = NewIndexIterator(ReadOptions(), &iiter_on_stack);
+  for (iiter->SeekToFirst(); iiter->Valid(); iiter->Next()) {
+    Slice handle_value = iiter->value();
+    BlockHandle handle;
+    handle.DecodeFrom(&handle_value);
+    rep->block_pos.push_back({handle.offset(),handle.size()});
+  }
+
 
   return s;
 }
