@@ -345,23 +345,9 @@ class RMINew {
     assert(config.stage_configs[1].model_type ==
            RMIConfig::StageConfig::LinearRegression);
     // printf("rmi init with model num: %u\n", config.stage_configs[1].model_n);
-#ifdef EVENLY_ASSIGN
-    // COUT_THIS("RMI use new-dispatch!");
-#else
-    // COUT_THIS("RMI use original-dispatch!");
-#endif
+
     // init models stage by stage
-#ifdef LRfirst
     first_stage = new LRStage(config.stage_configs[0].model_n);
-#elif defined(BestModel)
-    first_stage = new BestStage(config.stage_configs[0].model_n);
-#else
-    first_stage =
-        new NNStage<Weight_T>(1, 1, config.stage_configs[0].nn_config.width,
-                              config.stage_configs[0].nn_config.depth,
-                              config.stage_configs[0].nn_config.weight_dir,
-                              config.stage_configs[0].model_n);
-#endif
     second_stage = new LRStage(config.stage_configs[1].model_n);
   }
 
@@ -600,11 +586,7 @@ class RMINew {
     unsigned next_stage_model_n = second_stage->get_model_n();
     unsigned next_stage_model_i;
 
-#ifdef EVENLY_ASSIGN
-    next_stage_model_i = static_cast<unsigned>(
-        (index_pred - first_stage_pred_min) /
-        (first_stage_pred_max + 1 - first_stage_pred_min) * next_stage_model_n);
-#else
+
     if (index_pred >= key_n) {
       // if(index_pred >= max_addr) {
       next_stage_model_i = next_stage_model_n - 1;
@@ -614,10 +596,9 @@ class RMINew {
       next_stage_model_i =
           static_cast<unsigned>(index_pred / key_n * next_stage_model_n);
     }
-#endif
     return next_stage_model_i;
   }
-#endif
+
 
  private:
   const RMIConfig config;
@@ -635,13 +616,7 @@ class RMINew {
 
   double first_stage_pred_max, first_stage_pred_min;
 
-#ifdef LRfirst
   LRStage* first_stage;
-#elif defined(BestModel)
-BestStage* first_stage;
-#else
-NNStage<Weight_T>* first_stage;
-#endif
   LRStage* second_stage;
 };
 
