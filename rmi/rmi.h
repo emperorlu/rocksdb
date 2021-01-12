@@ -385,10 +385,10 @@ class RMINew {
     second_stage = new LRStage(config_.stage_configs[1].model_n);
   }
 
-  RMINew(const std::string& stages, const RMIConfig& config) {
+  RMINew(const std::string& stages, const RMIConfig& config_) {
 
     // std::cout << __func__ << " stages size:" << stages.length() << std::endl;
-    int len = config.stage_configs[1].model_n;
+    int len = config_.stage_configs[1].model_n;
     
     int size = 2 * sizeof(double);
     // int size = (stages.length()-sizeof(key_n)+1) / len;
@@ -416,9 +416,9 @@ class RMINew {
     second_stage = new LRStage(second);
   }
 
-  RMINew(const std::string& stages, const RMIConfig& config, unsigned num) {
+  RMINew(const std::string& stages, const RMIConfig& config_, unsigned num) {
     key_n = num;
-    int len = config.stage_configs[1].model_n;
+    int len = config_.stage_configs[1].model_n;
     int size = stages.length() / len;
     int pos = 0;
     
@@ -507,8 +507,8 @@ class RMINew {
       //     "[RMI] first stage trained done, start training the second stage\n");
       int aug_keys = 0;
       for (int i = 0; i < key_n; ++i) {
-        double index_pred = first_stage->predict(all_values[i].first, model_i);
-        unsigned next_stage_model_i = pick_next_stage_model(index_pred);
+        double index_pred_ = first_stage->predict(all_values[i].first, model_i);
+        unsigned next_stage_model_i = pick_next_stage_model(index_pred_);
 
         second_stage->assign_data(all_values[i].first, all_values[i].second,
                                   next_stage_model_i);
@@ -540,8 +540,8 @@ class RMINew {
           if (i + 1 < uni_keys.size()) {
             // check next key
             double index_pred = first_stage->predict(uni_keys[i + 1], 0);
-            unsigned next_stage_model_i_1 = pick_next_stage_model(index_pred);
-            if (next_stage_model_i_1 != next_stage_model_i) {
+            unsigned next_stage_model_i_1_ = pick_next_stage_model(index_pred);
+            if (next_stage_model_i_1_ != next_stage_model_i) {
               // augument the data
               second_stage->assign_data(uni_keys[i + 1], uni_indexes[i + 1],
                                         next_stage_model_i);
