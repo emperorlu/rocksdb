@@ -397,7 +397,8 @@ void BlockBasedTableBuilder::Add(const Slice& key, const Slice& value) {
   r->_bytes += value.size();
   Slice nkey (key.data(),8);
   uint64_t lekey = 0;
-  sscanf(nkey.data(), "%8lld", &lekey);
+  // sscanf(nkey.data(), "%8lld", &lekey);
+  memcpy(&lekey, nkey.data(), sizeof(lekey));
   LearnedMod->insert(lekey,r->_bytes);
 
   // ValueType value_type = ExtractValueType(key);
@@ -671,7 +672,8 @@ Status BlockBasedTableBuilder::Finish() {
   for(auto& item: r->all_values){
     Slice nkey (item.first.data(),8);
     uint64_t lekey = 0;
-    sscanf(nkey.data(), "%8lld", &lekey);
+    // sscanf(nkey.data(), "%8lld", &lekey);
+    memcpy(&lekey, nkey.data(), sizeof(lekey));
     auto value_get = LearnedMod->get(lekey);
     int block_num = value_get / 4096;
 
