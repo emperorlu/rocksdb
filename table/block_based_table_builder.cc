@@ -399,7 +399,8 @@ void BlockBasedTableBuilder::Add(const Slice& key, const Slice& value) {
   uint64_t lekey = 0;
   // sscanf(nkey.data(), "%llu", &lekey);
   // memcpy(&lekey, nkey.data(), sizeof(lekey));
-  memcpy(&lekey, key.data(), key.size());
+  memcpy(&lekey, key.data(), sizeof(lekey));
+  std::cout << __func__ << " lekey: " << lekey << std::endl;
   LearnedMod->insert(lekey,r->_bytes);
 
   // ValueType value_type = ExtractValueType(key);
