@@ -112,6 +112,9 @@ class BlockBasedTable : public TableReader {
   // @param skip_filters Disables loading/accessing the filter block
   Status Get(const ReadOptions& readOptions, const Slice& key,
              GetContext* get_context, bool skip_filters = false) override;
+  
+  Status ModelGet(const ReadOptions& read_options, const Slice& key,
+              GetContext* get_context, bool skip_filters) override;
 
   // Pre-fetch the disk blocks that correspond to the key range specified by
   // (kbegin, kend). The call will return error status in the event of
