@@ -77,13 +77,13 @@ class MixTopStage {
     nn.prepare(keys, indexes, index_pred_max, index_pred_min);
 
     for (int i = 0; i < keys.size(); ++i) {
-      for (int i = 0; i < models.size(); ++i) {
-        auto& model = models[i];
+      for (int j = 0; j < models.size(); ++j) {
+        auto& model = models[j];
         if (model.range_end < keys[i]) continue;
 
         if (model.is_lr) {
-          lr_data_in[i].first.push_back(keys[i]);
-          lr_data_in[i].second.push_back(indexes[i]);
+          lr_data_in[j].first.push_back(keys[i]);
+          lr_data_in[j].second.push_back(indexes[i]);
         }
 
         break;
@@ -153,7 +153,7 @@ class MixTopStage {
 class BestStage {
  public:
   BestStage(unsigned model_n) {
-    for (int model_i = 0; model_i < model_n; ++model_i) {
+    for (unsigned model_i = 0; model_i < model_n; ++model_i) {
       models.emplace_back();
     }
   }
@@ -199,7 +199,7 @@ class BestStage {
 class LRStage {
  public:
   LRStage(unsigned model_n) {
-    for (int model_i = 0; model_i < model_n; ++model_i) {
+    for (unsigned model_i = 0; model_i < model_n; ++model_i) {
       models.emplace_back();
     }
   }
@@ -540,8 +540,8 @@ class RMINew {
           if (i + 1 < uni_keys.size()) {
             // check next key
             double index_predb = first_stage->predict(uni_keys[i + 1], 0);
-            unsigned next_stage_model_i_1 = pick_next_stage_model(index_predb);
-            if (next_stage_model_i_1 != next_stage_model_i) {
+            unsigned next_stage_model_i_1_ = pick_next_stage_model(index_predb);
+            if (next_stage_model_i_1_ != next_stage_model_i) {
               // augument the data
               second_stage->assign_data(uni_keys[i + 1], uni_indexes[i + 1],
                                         next_stage_model_i);
