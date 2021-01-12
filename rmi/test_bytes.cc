@@ -10,6 +10,7 @@ int main(int argc,char *argv[]){
   first.model_type = RMIConfig::StageConfig::LinearRegression;
   first.model_n = 1;
 
+  
   second.model_n = atoi(argv[1]);
   second.model_type = RMIConfig::StageConfig::LinearRegression;
   rmi_config.stage_configs.push_back(first);
