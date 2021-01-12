@@ -21,11 +21,10 @@
 #define unlikely(x) __builtin_expect(!!(x), 0)
 #endif
 
-
 class LRStage {
  public:
   LRStage(unsigned model_n) {
-    for (unsigned model_i = 0; model_i < model_n; ++model_i) {
+    for (int model_i = 0; model_i < model_n; ++model_i) {
       models.emplace_back();
     }
   }
@@ -79,55 +78,6 @@ class LRStage {
       data_in;  // valid during preparing stages
   // private:
   std::vector<LinearRegression> models;
-};
-
-template <class Weight_T>
-class NNStage {
- public:
-  NNStage(int feat_n, int out_n, int width, int depth, std::string weight_dir,
-          unsigned model_n) {
-    for (int model_i = 0; model_i < model_n; ++model_i) {
-      this->models.emplace_back(feat_n, out_n, width, depth, weight_dir);
-    }
-  }
-
-  inline void prepare(const std::vector<double>& keys,
-                      const std::vector<learned_addr_t>& indexes,
-                      unsigned model_i, double& index_pred_max,
-                      double& index_pred_min) {
-    models[model_i].prepare(keys, indexes, index_pred_max, index_pred_min);
-  }
-
-  inline void prepare_last(const std::vector<double>& keys,
-                           const std::vector<learned_addr_t>& indexes,
-                           unsigned model_i) {
-    models[model_i].prepare_last(keys, indexes);
-  }
-
-  inline double predict(const double key, unsigned model_i) {
-    return models[model_i].predict(key);
-  }
-
-
-  inline unsigned get_model_n() const { return models.size(); }
-
-  void reset_data() {
-    data_in = std::vector<
-        std::pair<std::vector<double>, std::vector<learned_addr_t>>>(
-        get_model_n());
-  }
-
-  void assign_data(const double key, const unsigned index,
-                   const unsigned model_i) {
-    data_in[model_i].first.push_back(key);
-    data_in[model_i].second.push_back(index);
-  }
-
-  std::vector<std::pair<std::vector<double>, std::vector<learned_addr_t>>>
-      data_in;  // valid during preparing stages
-
- private:
-  std::vector<NN<Weight_T>> models;
 };
 
 struct RMIConfig {
