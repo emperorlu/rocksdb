@@ -12,7 +12,7 @@
 #include <assert.h>
 #include <inttypes.h>
 #include <stdio.h>
-
+#include <iostream>
 #include <list>
 #include <map>
 #include <memory>
