@@ -32,9 +32,9 @@ class MixTopStage {
  public:
   MixTopStage(int feat_n, int out_n, int width, int depth,
               std::string weight_dir,
-              std::vector<std::pair<double, double>> nn_ranges_)
+              std::vector<std::pair<double, double>> nn_ranges)
       : nn(NN<Weight_T>(feat_n, out_n, width, depth, weight_dir)),
-        nn_ranges(nn_ranges_) {
+        nn_ranges(nn_ranges) {
     // sanity chekc the nn_ranges
     struct myclass {
       bool operator()(std::pair<double, double> i,
@@ -77,23 +77,23 @@ class MixTopStage {
     nn.prepare(keys, indexes, index_pred_max, index_pred_min);
 
     for (int i = 0; i < keys.size(); ++i) {
-      for (int j = 0; j < models.size(); ++j) {
-        auto& model = models[j];
+      for (int model_i = 0; model_i < models.size(); ++model_i) {
+        auto& model = models[model_i];
         if (model.range_end < keys[i]) continue;
 
         if (model.is_lr) {
-          lr_data_in[j].first.push_back(keys[i]);
-          lr_data_in[j].second.push_back(indexes[i]);
+          lr_data_in[model_i].first.push_back(keys[i]);
+          lr_data_in[model_i].second.push_back(indexes[i]);
         }
 
         break;
       }
     }
-    for (int i = 0; i < models.size(); ++i) {
-      auto& model = models[i];
+    for (int model_i = 0; model_i < models.size(); ++model_i) {
+      auto& model = models[model_i];
       if (model.is_lr) {
         double lr_index_pred_max, lr_index_pred_min;
-        model.lr.prepare(lr_data_in[i].first, lr_data_in[i].second,
+        model.lr.prepare(lr_data_in[model_i].first, lr_data_in[model_i].second,
                          lr_index_pred_max, lr_index_pred_min);
 
         if (lr_index_pred_max > index_pred_max)
@@ -153,7 +153,7 @@ class MixTopStage {
 class BestStage {
  public:
   BestStage(unsigned model_n) {
-    for (unsigned model_i = 0; model_i < model_n; ++model_i) {
+    for (int model_i = 0; model_i < model_n; ++model_i) {
       models.emplace_back();
     }
   }
@@ -199,7 +199,7 @@ class BestStage {
 class LRStage {
  public:
   LRStage(unsigned model_n) {
-    for (unsigned model_i = 0; model_i < model_n; ++model_i) {
+    for (int model_i = 0; model_i < model_n; ++model_i) {
       models.emplace_back();
     }
   }
@@ -343,12 +343,12 @@ struct RMIConfig {
 template <class Weight_T>
 class RMINew {
  public:
-  RMINew(const RMIConfig& config_) : config(config_) {
-    assert(config_.stage_configs.size() == 2);
-    assert(config_.stage_configs.front().model_n == 1);
-    assert(config_.stage_configs[1].model_type ==
+  RMINew(const RMIConfig& config) : config(config) {
+    assert(config.stage_configs.size() == 2);
+    assert(config.stage_configs.front().model_n == 1);
+    assert(config.stage_configs[1].model_type ==
            RMIConfig::StageConfig::LinearRegression);
-    // printf("rmi init with model num: %u\n", config_.stage_configs[1].model_n);
+    // printf("rmi init with model num: %u\n", config.stage_configs[1].model_n);
 #ifdef EVENLY_ASSIGN
     COUT_THIS("RMI use new-dispatch!");
 #else
@@ -356,17 +356,17 @@ class RMINew {
 #endif
     // init models stage by stage
 #ifdef LRfirst
-    first_stage = new LRStage(config_.stage_configs[0].model_n);
+    first_stage = new LRStage(config.stage_configs[0].model_n);
 #elif defined(BestModel)
-    first_stage = new BestStage(config_.stage_configs[0].model_n);
+    first_stage = new BestStage(config.stage_configs[0].model_n);
 #else
     first_stage =
-        new NNStage<Weight_T>(1, 1, config_.stage_configs[0].nn_config.width,
-                              config_.stage_configs[0].nn_config.depth,
-                              config_.stage_configs[0].nn_config.weight_dir,
-                              config_.stage_configs[0].model_n);
+        new NNStage<Weight_T>(1, 1, config.stage_configs[0].nn_config.width,
+                              config.stage_configs[0].nn_config.depth,
+                              config.stage_configs[0].nn_config.weight_dir,
+                              config.stage_configs[0].model_n);
 #endif
-    second_stage = new LRStage(config_.stage_configs[1].model_n);
+    second_stage = new LRStage(config.stage_configs[1].model_n);
   }
 
   RMINew(const std::vector<std::string>& first,
@@ -379,16 +379,16 @@ class RMINew {
     second_stage = new LRStage(second);
   }
 
-  RMINew(const std::vector<std::string>& first, const RMIConfig& config_) {
+  RMINew(const std::vector<std::string>& first, const RMIConfig& config) {
     first_stage = new LRStage(first);
-    // printf("second stage num %d\n", config_.stage_configs[1].model_n);
-    second_stage = new LRStage(config_.stage_configs[1].model_n);
+    // printf("second stage num %d\n", config.stage_configs[1].model_n);
+    second_stage = new LRStage(config.stage_configs[1].model_n);
   }
 
-  RMINew(const std::string& stages, const RMIConfig& config_) {
+  RMINew(const std::string& stages, const RMIConfig& config) {
 
     // std::cout << __func__ << " stages size:" << stages.length() << std::endl;
-    int len = config_.stage_configs[1].model_n;
+    int len = config.stage_configs[1].model_n;
     
     int size = 2 * sizeof(double);
     // int size = (stages.length()-sizeof(key_n)+1) / len;
@@ -416,9 +416,9 @@ class RMINew {
     second_stage = new LRStage(second);
   }
 
-  RMINew(const std::string& stages, const RMIConfig& config_, unsigned num) {
+  RMINew(const std::string& stages, const RMIConfig& config, unsigned num) {
     key_n = num;
-    int len = config_.stage_configs[1].model_n;
+    int len = config.stage_configs[1].model_n;
     int size = stages.length() / len;
     int pos = 0;
     
@@ -524,8 +524,8 @@ class RMINew {
         // my previous key
         if (i - 1 > 0) {
           // augument the previous model
-          double index_preda = first_stage->predict(uni_keys[i - 1], 0);
-          unsigned next_stage_model_i_1 = pick_next_stage_model(index_preda);
+          double index_pred = first_stage->predict(uni_keys[i - 1], 0);
+          unsigned next_stage_model_i_1 = pick_next_stage_model(index_pred);
 
           if (next_stage_model_i_1 != next_stage_model_i) {
             // augument the data
@@ -539,9 +539,9 @@ class RMINew {
           // my next key
           if (i + 1 < uni_keys.size()) {
             // check next key
-            double index_predb = first_stage->predict(uni_keys[i + 1], 0);
-            unsigned next_stage_model_i_1_ = pick_next_stage_model(index_predb);
-            if (next_stage_model_i_1_ != next_stage_model_i) {
+            double index_pred = first_stage->predict(uni_keys[i + 1], 0);
+            unsigned next_stage_model_i_1 = pick_next_stage_model(index_pred);
+            if (next_stage_model_i_1 != next_stage_model_i) {
               // augument the data
               second_stage->assign_data(uni_keys[i + 1], uni_indexes[i + 1],
                                         next_stage_model_i);
