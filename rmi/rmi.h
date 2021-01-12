@@ -72,7 +72,7 @@ class MixTopStage {
 
   inline void prepare(const std::vector<double>& keys,
                       const std::vector<learned_addr_t>& indexes,
-                      unsigned model_i, double& index_pred_max,
+                      unsigned model_i_, double& index_pred_max,
                       double& index_pred_min) {
     nn.prepare(keys, indexes, index_pred_max, index_pred_min);
 
