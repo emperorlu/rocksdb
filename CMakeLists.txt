@@ -34,6 +34,10 @@
 
 cmake_minimum_required(VERSION 2.6)
 project(rocksdb)
+set(MKL_LINK_DIRECTORY "/opt/intel/mkl/lib/intel64")
+set(MKL_INCLUDE_DIRECTORY "/opt/intel/mkl/include")
+link_directories(${MKL_LINK_DIRECTORY})
+include_directories(${MKL_INCLUDE_DIRECTORY})
 
 if(POLICY CMP0042)
   cmake_policy(SET CMP0042 NEW)
@@ -282,6 +286,10 @@ add_subdirectory(third-party/gtest-1.7.0/fused-src/gtest)
 # Main library source code
 
 set(SOURCES
+        rmi/rmi.h
+        rmi/model.h
+        rmi/marshal.hpp
+        rmi/learned_index.h
         cache/clock_cache.cc
         cache/lru_cache.cc
         cache/sharded_cache.cc
@@ -693,7 +701,7 @@ foreach(sourcefile ${BENCHMARKS})
   get_filename_component(exename ${sourcefile} NAME_WE)
   add_executable(${exename}${ARTIFACT_SUFFIX} ${sourcefile}
     $<TARGET_OBJECTS:testharness>)
-  target_link_libraries(${exename}${ARTIFACT_SUFFIX} gtest ${LIBS})
+  target_link_libraries(${exename}${ARTIFACT_SUFFIX} gtest ${LIBS} mkl_rt)
 endforeach(sourcefile ${BENCHMARKS})
 
 # For test util library that is build only in DEBUG mode
@@ -731,7 +739,7 @@ foreach(sourcefile ${TEST_EXES})
       EXCLUDE_FROM_DEFAULT_BUILD_MINRELEASE 1
       EXCLUDE_FROM_DEFAULT_BUILD_RELWITHDEBINFO 1
       )
-    target_link_libraries(${exename}${ARTIFACT_SUFFIX} testutillib${ARTIFACT_SUFFIX} gtest ${LIBS})
+    target_link_libraries(${exename}${ARTIFACT_SUFFIX} testutillib${ARTIFACT_SUFFIX} gtest ${LIBS} mkl_rt)
     if(NOT "${exename}" MATCHES "db_sanity_test")
       add_test(NAME ${exename} COMMAND ${exename}${ARTIFACT_SUFFIX})
       add_dependencies(check ${exename}${ARTIFACT_SUFFIX})
@@ -751,7 +759,7 @@ foreach(sourcefile ${C_TEST_EXES})
       EXCLUDE_FROM_DEFAULT_BUILD_MINRELEASE 1
       EXCLUDE_FROM_DEFAULT_BUILD_RELWITHDEBINFO 1
       )
-    target_link_libraries(${exename}${ARTIFACT_SUFFIX} ${ROCKSDB_IMPORT_LIB} testutillib${ARTIFACT_SUFFIX})
+    target_link_libraries(${exename}${ARTIFACT_SUFFIX} ${ROCKSDB_IMPORT_LIB} testutillib${ARTIFACT_SUFFIX} mkl_rt)
     add_test(NAME ${exename} COMMAND ${exename}${ARTIFACT_SUFFIX})
     add_dependencies(check ${exename}${ARTIFACT_SUFFIX})
 endforeach(sourcefile ${C_TEST_EXES})

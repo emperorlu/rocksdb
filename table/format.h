@@ -118,6 +118,9 @@ class Footer {
 
   void set_index_handle(const BlockHandle& h) { index_handle_ = h; }
 
+  const BlockHandle& learned_handle() const { return learned_handle_; }
+  void set_learned_handle(const BlockHandle& h) { learned_handle_ = h; }
+
   uint64_t table_magic_number() const { return table_magic_number_; }
 
   void EncodeTo(std::string* dst) const;
@@ -167,6 +170,7 @@ class Footer {
   ChecksumType checksum_;
   BlockHandle metaindex_handle_;
   BlockHandle index_handle_;
+  BlockHandle learned_handle_;
   uint64_t table_magic_number_ = 0;
 };
 

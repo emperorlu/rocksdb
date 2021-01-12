@@ -236,6 +236,10 @@ class BlockBasedTableBuilder::BlockBasedTablePropertiesCollector
 };
 
 struct BlockBasedTableBuilder::Rep {
+  // for model
+  uint64_t _bytes = 0;
+  std::vector<std::pair<Slice, Slice>> all_values;
+
   const ImmutableCFOptions ioptions;
   const BlockBasedTableOptions table_options;
   const InternalKeyComparator& internal_comparator;
@@ -283,6 +287,7 @@ struct BlockBasedTableBuilder::Rep {
         table_options(table_opt),
         internal_comparator(icomparator),
         file(f),
+        _bytes(0),
         data_block(table_options.block_restart_interval,
                    table_options.use_delta_encoding),
         range_del_block(1),  // TODO(andrewkr): restart_interval unnecessary
@@ -361,70 +366,93 @@ BlockBasedTableBuilder::BlockBasedTableBuilder(
         &rep_->compressed_cache_key_prefix[0],
         &rep_->compressed_cache_key_prefix_size);
   }
+
+    // new learnedMod
+  RMIConfig rmi_config;
+  RMIConfig::StageConfig first, second;
+
+  first.model_type = RMIConfig::StageConfig::LinearRegression;
+  first.model_n = 1;
+
+  second.model_n = 1000;
+  second.model_type = RMIConfig::StageConfig::LinearRegression;
+  rmi_config.stage_configs.push_back(first);
+  rmi_config.stage_configs.push_back(second);
+
+  LearnedMod = new LearnedRangeIndexSingleKey<uint64_t,float> (rmi_config);
 }
 
 BlockBasedTableBuilder::~BlockBasedTableBuilder() {
   assert(rep_->closed);  // Catch errors where caller forgot to call Finish()
   delete rep_;
+  delete LearnedMod;
 }
 
 void BlockBasedTableBuilder::Add(const Slice& key, const Slice& value) {
   Rep* r = rep_;
   assert(!r->closed);
   if (!ok()) return;
-  ValueType value_type = ExtractValueType(key);
-  if (IsValueType(value_type)) {
-    if (r->props.num_entries > 0) {
-      assert(r->internal_comparator.Compare(key, Slice(r->last_key)) > 0);
-    }
+  r->all_values.push_back({key, value});
+  r->_bytes += key.size();
+  r->_bytes += value.size();
+  Slice nkey (key.data(),8);
+  uint64_t lekey = 0;
+  sscanf(nkey.data(), "%8lld", &lekey);
+  LearnedMod->insert(lekey,r->_bytes);
 
-    auto should_flush = r->flush_block_policy->Update(key, value);
-    if (should_flush) {
-      assert(!r->data_block.empty());
-      Flush();
+  // ValueType value_type = ExtractValueType(key);
+  // if (IsValueType(value_type)) {
+  //   if (r->props.num_entries > 0) {
+  //     assert(r->internal_comparator.Compare(key, Slice(r->last_key)) > 0);
+  //   }
 
-      // Add item to index block.
-      // We do not emit the index entry for a block until we have seen the
-      // first key for the next data block.  This allows us to use shorter
-      // keys in the index block.  For example, consider a block boundary
-      // between the keys "the quick brown fox" and "the who".  We can use
-      // "the r" as the key for the index block entry since it is >= all
-      // entries in the first block and < all entries in subsequent
-      // blocks.
-      if (ok()) {
-        r->index_builder->AddIndexEntry(&r->last_key, &key, r->pending_handle);
-      }
-    }
+  //   auto should_flush = r->flush_block_policy->Update(key, value);
+  //   if (should_flush) {
+  //     assert(!r->data_block.empty());
+  //     Flush();
 
-    // Note: PartitionedFilterBlockBuilder requires key being added to filter
-    // builder after being added to index builder.
-    if (r->filter_builder != nullptr) {
-      r->filter_builder->Add(ExtractUserKey(key));
-    }
+  //     // Add item to index block.
+  //     // We do not emit the index entry for a block until we have seen the
+  //     // first key for the next data block.  This allows us to use shorter
+  //     // keys in the index block.  For example, consider a block boundary
+  //     // between the keys "the quick brown fox" and "the who".  We can use
+  //     // "the r" as the key for the index block entry since it is >= all
+  //     // entries in the first block and < all entries in subsequent
+  //     // blocks.
+  //     if (ok()) {
+  //       r->index_builder->AddIndexEntry(&r->last_key, &key, r->pending_handle);
+  //     }
+  //   }
 
-    r->last_key.assign(key.data(), key.size());
-    r->data_block.Add(key, value);
-    r->props.num_entries++;
-    r->props.raw_key_size += key.size();
-    r->props.raw_value_size += value.size();
+  //   // Note: PartitionedFilterBlockBuilder requires key being added to filter
+  //   // builder after being added to index builder.
+  //   if (r->filter_builder != nullptr) {
+  //     r->filter_builder->Add(ExtractUserKey(key));
+  //   }
 
-    r->index_builder->OnKeyAdded(key);
-    NotifyCollectTableCollectorsOnAdd(key, value, r->offset,
-                                      r->table_properties_collectors,
-                                      r->ioptions.info_log);
+  //   r->last_key.assign(key.data(), key.size());
+  //   r->data_block.Add(key, value);
+  //   r->props.num_entries++;
+  //   r->props.raw_key_size += key.size();
+  //   r->props.raw_value_size += value.size();
 
-  } else if (value_type == kTypeRangeDeletion) {
-    // TODO(wanning&andrewkr) add num_tomestone to table properties
-    r->range_del_block.Add(key, value);
-    ++r->props.num_entries;
-    r->props.raw_key_size += key.size();
-    r->props.raw_value_size += value.size();
-    NotifyCollectTableCollectorsOnAdd(key, value, r->offset,
-                                      r->table_properties_collectors,
-                                      r->ioptions.info_log);
-  } else {
-    assert(false);
-  }
+  //   r->index_builder->OnKeyAdded(key);
+  //   NotifyCollectTableCollectorsOnAdd(key, value, r->offset,
+  //                                     r->table_properties_collectors,
+  //                                     r->ioptions.info_log);
+
+  // } else if (value_type == kTypeRangeDeletion) {
+  //   // TODO(wanning&andrewkr) add num_tomestone to table properties
+  //   r->range_del_block.Add(key, value);
+  //   ++r->props.num_entries;
+  //   r->props.raw_key_size += key.size();
+  //   r->props.raw_value_size += value.size();
+  //   NotifyCollectTableCollectorsOnAdd(key, value, r->offset,
+  //                                     r->table_properties_collectors,
+  //                                     r->ioptions.info_log);
+  // } else {
+  //   assert(false);
+  // }
 }
 
 void BlockBasedTableBuilder::Flush() {
@@ -446,6 +474,7 @@ void BlockBasedTableBuilder::WriteBlock(BlockBuilder* block,
   WriteBlock(block->Finish(), handle, is_data_block);
   block->Reset();
 }
+
 
 void BlockBasedTableBuilder::WriteBlock(const Slice& raw_block_contents,
                                         BlockHandle* handle,
@@ -524,6 +553,17 @@ void BlockBasedTableBuilder::WriteBlock(const Slice& raw_block_contents,
 
   WriteRawBlock(block_contents, type, handle);
   r->compressed_output.clear();
+}
+
+void BlockBasedTableBuilder::WriteLearnBlock(BlockHandle* handle) {
+  string param;
+  LearnedMod->serialize(param);
+  Slice raw(param);
+  Rep* r = rep_;
+  handle->set_offset(r->offset);
+  handle->set_size(raw.size());
+  r->status = r->file->Append(raw);
+  r->offset += raw.size();
 }
 
 void BlockBasedTableBuilder::WriteRawBlock(const Slice& block_contents,
@@ -620,6 +660,77 @@ Status BlockBasedTableBuilder::InsertBlockInCache(const Slice& block_contents,
 Status BlockBasedTableBuilder::Finish() {
   Rep* r = rep_;
   bool empty_data_block = r->data_block.empty();
+
+  LearnedMod->finish_insert();
+  LearnedMod->finish_train();
+  r->_bytes = 0;
+
+
+  // Write data block
+  int based = 0;
+  for(auto& item: r->all_values){
+    Slice nkey (item.first.data(),8);
+    uint64_t lekey = 0;
+    sscanf(nkey.data(), "%8lld", &lekey);
+    auto value_get = LearnedMod->get(lekey);
+    int block_num = value_get / 4096;
+
+    ValueType value_type = ExtractValueType(item.first);
+    if (IsValueType(value_type)) {
+      if (r->props.num_entries > 0) {
+        assert(r->internal_comparator.Compare(item.first, Slice(r->last_key)) > 0);
+      }
+
+      // auto should_flush = r->flush_block_policy->Update(item.first, item.second);
+      if (block_num != based) {
+        assert(!r->data_block.empty());
+        Flush();
+        based += 1;
+
+        // Add item to index block.
+        // We do not emit the index entry for a block until we have seen the
+        // first key for the next data block.  This allows us to use shorter
+        // keys in the index block.  For example, consider a block boundary
+        // between the keys "the quick brown fox" and "the who".  We can use
+        // "the r" as the key for the index block entry since it is >= all
+        // entries in the first block and < all entries in subsequent
+        // blocks.
+        if (ok()) {
+          r->index_builder->AddIndexEntry(&r->last_key, &item.first, r->pending_handle);
+        }
+      }
+
+      // Note: PartitionedFilterBlockBuilder requires key being added to filter
+      // builder after being added to index builder.
+      if (r->filter_builder != nullptr) {
+        r->filter_builder->Add(ExtractUserKey(item.first));
+      }
+
+      r->last_key.assign(item.first.data(), item.first.size());
+      r->data_block.Add(item.first, item.second);
+      r->props.num_entries++;
+      r->props.raw_key_size += item.first.size();
+      r->props.raw_value_size += item.second.size();
+
+      r->index_builder->OnKeyAdded(item.first);
+      NotifyCollectTableCollectorsOnAdd(item.first, item.second, r->offset,
+                                        r->table_properties_collectors,
+                                        r->ioptions.info_log);
+
+    } else if (value_type == kTypeRangeDeletion) {
+      // TODO(wanning&andrewkr) add num_tomestone to table properties
+      r->range_del_block.Add(item.first, item.second);
+      ++r->props.num_entries;
+      r->props.raw_key_size += item.first.size();
+      r->props.raw_value_size += item.second.size();
+      NotifyCollectTableCollectorsOnAdd(item.first, item.second, r->offset,
+                                        r->table_properties_collectors,
+                                        r->ioptions.info_log);
+    } else {
+      assert(false);
+    }
+  }
+
   Flush();
   assert(!r->closed);
   r->closed = true;
@@ -632,7 +743,7 @@ Status BlockBasedTableBuilder::Finish() {
         &r->last_key, nullptr /* no next data block */, r->pending_handle);
   }
 
-  BlockHandle filter_block_handle, metaindex_block_handle, index_block_handle,
+  BlockHandle filter_block_handle, metaindex_block_handle, index_block_handle, learned_block_handle,
       compression_dict_block_handle, range_del_block_handle;
   // Write filter block
   if (ok() && r->filter_builder != nullptr) {
@@ -774,6 +885,11 @@ Status BlockBasedTableBuilder::Finish() {
     }
   }
 
+//write learned index into block
+  if (ok()) {
+    WriteLearnBlock(&learned_block_handle);
+  } 
+
   // Write footer
   if (ok()) {
     // No need to write out new footer if we're using default checksum.
@@ -792,6 +908,8 @@ Status BlockBasedTableBuilder::Finish() {
                   r->table_options.format_version);
     footer.set_metaindex_handle(metaindex_block_handle);
     footer.set_index_handle(index_block_handle);
+    //learned 
+    footer.set_learned_handle(learned_block_handle);
     footer.set_checksum(r->table_options.checksum);
     std::string footer_encoding;
     footer.EncodeTo(&footer_encoding);

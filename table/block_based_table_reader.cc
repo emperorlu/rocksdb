@@ -60,6 +60,7 @@ typedef BlockBasedTable::IndexReader IndexReader;
 
 BlockBasedTable::~BlockBasedTable() {
   Close();
+  delete rep_->learnedMod;
   delete rep_;
 }
 
@@ -550,16 +551,43 @@ Status BlockBasedTable::Open(const ImmutableCFOptions& ioptions,
         "version of RocksDB?");
   }
 
+  //read model
+  size_t n = static_cast<size_t>(footer.learned_handle().size());
+  char* buf = new char[n];
+  Slice contents;
+  s = file->Read(footer.learned_handle().offset(), n, &contents, buf);
+
+  RMIConfig rmi_config;
+  RMIConfig::StageConfig first, second;
+  first.model_type = RMIConfig::StageConfig::LinearRegression;
+  first.model_n = 1;
+  second.model_n = 1000;
+  second.model_type = RMIConfig::StageConfig::LinearRegression;
+  rmi_config.stage_configs.push_back(first);
+  rmi_config.stage_configs.push_back(second);
+
   // We've successfully read the footer. We are ready to serve requests.
   // Better not mutate rep_ after the creation. eg. internal_prefix_transform
   // raw pointer will be used to create HashIndexReader, whose reset may
   // access a dangling pointer.
   Rep* rep = new BlockBasedTable::Rep(ioptions, env_options, table_options,
                                       internal_comparator, skip_filters);
+  rep->block_pos.clear();
+  BlockIter iiter_on_stack;
+  auto iiter = NewIndexIterator(ioptions, &iiter_on_stack);
+  for (iiter->SeekToFirst(); iiter->Valid(); iiter->Next()) {
+    Slice handle_value = iiter->value();
+    BlockHandle handle;
+    handle.DecodeFrom(&handle_value);
+    rep->block_pos.push_back({handle.offset(),handle.size()});
+  }
+  delete iiter;
+
   rep->file = std::move(file);
   rep->footer = footer;
   rep->index_type = table_options.index_type;
   rep->hash_index_allow_collision = table_options.hash_index_allow_collision;
+  rep->learnedMod = new LearnedRangeIndexSingleKey<uint64_t,float> (string(contents.data(),contents.size()), rmi_config);
   // We need to wrap data with internal_prefix_transform to make sure it can
   // handle prefix correctly.
   rep->internal_prefix_transform.reset(
@@ -1645,7 +1673,7 @@ Status BlockBasedTable::Get(const ReadOptions& read_options, const Slice& key,
         break;
       } else {
         BlockIter biter;
-        NewDataBlockIterator(rep_, read_options, iiter->value(), &biter);
+        NewDataBlockIterator(rep_, read_options, handle, &biter, true, s);
 
         if (read_options.read_tier == kBlockCacheTier &&
             biter.status().IsIncomplete()) {
@@ -1692,6 +1720,99 @@ Status BlockBasedTable::Get(const ReadOptions& read_options, const Slice& key,
   }
   return s;
 }
+
+Status BlockBasedTable::ModelGet(const ReadOptions& read_options, const Slice& key,
+                            GetContext* get_context, bool skip_filters) {
+  Status s;
+  const bool no_io = read_options.read_tier == kBlockCacheTier;
+  CachableEntry<FilterBlockReader> filter_entry;
+  if (!skip_filters) {
+    filter_entry = GetFilter(read_options.read_tier == kBlockCacheTier);
+  }
+  FilterBlockReader* filter = filter_entry.value;
+
+  // First check the full filter
+  // If full filter not useful, Then go into each block
+  if (!FullFilterKeyMayMatch(read_options, filter, key, no_io)) {
+    RecordTick(rep_->ioptions.statistics, BLOOM_FILTER_USEFUL);
+  } else {
+    // BlockIter iiter_on_stack;
+    // auto iiter = NewIndexIterator(read_options, &iiter_on_stack);
+    // std::unique_ptr<InternalIterator> iiter_unique_ptr;
+    // if (iiter != &iiter_on_stack) {
+    //   iiter_unique_ptr.reset(iiter);
+    // }
+    Slice nkey (k.data(),8);
+    uint64_t lekey = 0;
+    sscanf(nkey.data(), "%8lld", &lekey);
+    auto value_get = rep_->learnedMod->get(lekey);
+    int block_num = value_get / 4096;
+
+    bool done = false;
+    // for (iiter->Seek(key); iiter->Valid() && !done; iiter->Next()) {
+    //   Slice handle_value = iiter->value();
+
+      BlockHandle handle(rep_->block_pos[block_num].first, rep_->block_pos[block_num].second);
+      bool not_exist_in_filter =
+          filter != nullptr && filter->IsBlockBased() == true &&
+          !filter->KeyMayMatch(ExtractUserKey(key), handle.offset(), no_io);
+
+      if (not_exist_in_filter) {
+        // Not found
+        // TODO: think about interaction with Merge. If a user key cannot
+        // cross one data block, we should be fine.
+        RecordTick(rep_->ioptions.statistics, BLOOM_FILTER_USEFUL);
+        break;
+      } else {
+        BlockIter biter;
+        NewDataBlockIterator(rep_, read_options, handle, &biter, s);
+
+        if (read_options.read_tier == kBlockCacheTier &&
+            biter.status().IsIncomplete()) {
+          // couldn't get block from block_cache
+          // Update Saver.state to Found because we are only looking for whether
+          // we can guarantee the key is not there when "no_io" is set
+          get_context->MarkKeyMayExist();
+          break;
+        }
+        if (!biter.status().ok()) {
+          s = biter.status();
+          break;
+        }
+
+        // Call the *saver function on each entry/block until it returns false
+        for (biter.Seek(key); biter.Valid(); biter.Next()) {
+          ParsedInternalKey parsed_key;
+          if (!ParseInternalKey(biter.key(), &parsed_key)) {
+            s = Status::Corruption(Slice());
+          }
+
+          if (!get_context->SaveValue(parsed_key, biter.value(), &biter)) {
+            done = true;
+            break;
+          }
+        }
+        s = biter.status();
+      }
+      if (done) {
+        // Avoid the extra Next which is expensive in two-level indexes
+        break;
+      }
+    }
+    if (s.ok()) {
+      s = iiter->status();
+    }
+  }
+
+  // if rep_->filter_entry is not set, we should call Release(); otherwise
+  // don't call, in this case we have a local copy in rep_->filter_entry,
+  // it's pinned to the cache and will be released in the destructor
+  if (!rep_->filter_entry.IsSet()) {
+    filter_entry.Release(rep_->table_options.block_cache.get());
+  }
+  return s;
+}
+
 
 Status BlockBasedTable::Prefetch(const Slice* const begin,
                                  const Slice* const end) {

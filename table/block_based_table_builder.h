@@ -18,6 +18,7 @@
 #include "rocksdb/options.h"
 #include "rocksdb/status.h"
 #include "table/table_builder.h"
+#include "../rmi/learned_index.h"
 
 namespace rocksdb {
 
@@ -89,6 +90,7 @@ class BlockBasedTableBuilder : public TableBuilder {
   // Call block's Finish() method
   // and then write the compressed block contents to file.
   void WriteBlock(BlockBuilder* block, BlockHandle* handle, bool is_data_block);
+  void WriteLearnBlock(BlockHandle* handle);
 
   // Compress and write block content to the file.
   void WriteBlock(const Slice& block_contents, BlockHandle* handle,
@@ -116,6 +118,7 @@ class BlockBasedTableBuilder : public TableBuilder {
   // No copying allowed
   BlockBasedTableBuilder(const BlockBasedTableBuilder&) = delete;
   void operator=(const BlockBasedTableBuilder&) = delete;
+  LearnedRangeIndexSingleKey<uint64_t,float>* LearnedMod;
 };
 
 Slice CompressBlock(const Slice& raw,

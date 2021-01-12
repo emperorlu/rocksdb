@@ -30,6 +30,7 @@
 #include "table/two_level_iterator.h"
 #include "util/coding.h"
 #include "util/file_reader_writer.h"
+#include "rmi/learned_index.h"
 
 namespace rocksdb {
 
@@ -404,6 +405,8 @@ struct BlockBasedTable::Rep {
         global_seqno(kDisableGlobalSequenceNumber) {}
 
   const ImmutableCFOptions& ioptions;
+  LearnedRangeIndexSingleKey<uint64_t,float>* learnedMod;
+  std::vector<std::pair<uint32_t, uint32_t>> block_pos;
   const EnvOptions& env_options;
   const BlockBasedTableOptions& table_options;
   const FilterPolicy* const filter_policy;

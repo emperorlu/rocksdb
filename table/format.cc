@@ -116,6 +116,7 @@ void Footer::EncodeTo(std::string* dst) const {
     const size_t original_size = dst->size();
     metaindex_handle_.EncodeTo(dst);
     index_handle_.EncodeTo(dst);
+    learned_handle_.EncodeTo(dst);
     dst->resize(original_size + 2 * BlockHandle::kMaxEncodedLength);  // Padding
     PutFixed32(dst, static_cast<uint32_t>(table_magic_number() & 0xffffffffu));
     PutFixed32(dst, static_cast<uint32_t>(table_magic_number() >> 32));
@@ -125,6 +126,7 @@ void Footer::EncodeTo(std::string* dst) const {
     dst->push_back(static_cast<char>(checksum_));
     metaindex_handle_.EncodeTo(dst);
     index_handle_.EncodeTo(dst);
+    learned_handle_.EncodeTo(dst);
     dst->resize(original_size + kNewVersionsEncodedLength - 12);  // Padding
     PutFixed32(dst, version());
     PutFixed32(dst, static_cast<uint32_t>(table_magic_number() & 0xffffffffu));
@@ -188,6 +190,9 @@ Status Footer::DecodeFrom(Slice* input) {
     result = index_handle_.DecodeFrom(input);
   }
   if (result.ok()) {
+    result = learned_handle_.DecodeFrom(input);
+  }
+  if (result.ok()) {
     // We skip over any leftover data (just padding for now) in "input"
     const char* end = magic_ptr + kMagicNumberLengthByte;
     *input = Slice(end, input->data() + input->size() - end);
@@ -203,12 +208,14 @@ std::string Footer::ToString() const {
   if (legacy) {
     result.append("metaindex handle: " + metaindex_handle_.ToString() + "\n  ");
     result.append("index handle: " + index_handle_.ToString() + "\n  ");
+    result.append("learned handle: " + learned_handle_.ToString() + "\n  ");
     result.append("table_magic_number: " +
                   rocksdb::ToString(table_magic_number_) + "\n  ");
   } else {
     result.append("checksum: " + rocksdb::ToString(checksum_) + "\n  ");
     result.append("metaindex handle: " + metaindex_handle_.ToString() + "\n  ");
     result.append("index handle: " + index_handle_.ToString() + "\n  ");
+    result.append("learned handle: " + learned_handle_.ToString() + "\n  ");
     result.append("footer version: " + rocksdb::ToString(version_) + "\n  ");
     result.append("table_magic_number: " +
                   rocksdb::ToString(table_magic_number_) + "\n  ");
