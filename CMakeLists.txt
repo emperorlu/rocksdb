@@ -286,10 +286,6 @@ add_subdirectory(third-party/gtest-1.7.0/fused-src/gtest)
 # Main library source code
 
 set(SOURCES
-        rmi/rmi.h
-        rmi/model.h
-        rmi/marshal.hpp
-        rmi/learned_index.h
         cache/clock_cache.cc
         cache/lru_cache.cc
         cache/sharded_cache.cc
