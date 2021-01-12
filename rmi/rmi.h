@@ -382,6 +382,7 @@ class RMINew {
   }
 
 #endif
+
  private:
   const RMIConfig config;
 
