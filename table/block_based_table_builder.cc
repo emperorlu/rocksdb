@@ -392,12 +392,14 @@ void BlockBasedTableBuilder::Add(const Slice& key, const Slice& value) {
   Rep* r = rep_;
   assert(!r->closed);
   if (!ok()) return;
+
   r->all_values.push_back({key, value});
   r->_bytes += key.size();
   r->_bytes += value.size();
 
   uint64_t lekey = key.Touint64_t();
-  // std::cout << __func__ << " after lekey: " << lekey << std::endl;
+
+  std::cout << __func__ << " after lekey: " << lekey << std::endl;
   LearnedMod->insert(lekey,r->_bytes);
 
   // ValueType value_type = ExtractValueType(key);
@@ -669,12 +671,13 @@ Status BlockBasedTableBuilder::Finish() {
 
   // Write data block
   int based = 0;
-  std::cout << __func__ << " Write data block: " << r->all_values.size() <<  std::endl;
+  // std::cout << __func__ << " Write data block: " << r->all_values.size() <<  std::endl;
   for(auto& item: r->all_values){
 
     uint64_t lekey = item.first.Touint64_t();
     auto value_get = LearnedMod->get(lekey);
     int block_num = value_get / 4096;
+    std::cout << __func__ << " item.first: " << item.first.ToString(true) << std::endl;
     std::cout << __func__ << " lekey: " << lekey << std::endl;
     std::cout << __func__ << " block_num: " << block_num << std::endl;
 
@@ -734,6 +737,7 @@ Status BlockBasedTableBuilder::Finish() {
     }
   }
 
+  r->all_values.clear();
   Flush();
   assert(!r->closed);
   r->closed = true;
