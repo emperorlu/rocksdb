@@ -752,7 +752,6 @@ Status BlockBasedTableBuilder::Finish() {
   // to storage after metaindex block is written.
   
   if (ok() && !empty_data_block) {
-    std::cout  << " do last index " << std::endl;
     r->index_builder->AddIndexEntry(
         &r->last_key, nullptr /* no next data block */, r->pending_handle);
   }
