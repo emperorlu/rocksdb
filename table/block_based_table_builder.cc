@@ -394,7 +394,7 @@ uint32_t BlockBasedTableBuilder::reversebytes_uint32t(uint32_t value){
 }
 
 uint64_t BlockBasedTableBuilder::reversebytes_uint64t(uint64_t value){
-    uint32_t high_uint64 = uint64_t(reversebytes_uint32t(uint32_t(value)));         
+    uint64_t high_uint64 = uint64_t(reversebytes_uint32t(uint32_t(value)));         
     uint64_t low_uint64 = (uint64_t)reversebytes_uint32t(uint32_t(value >> 32));    
     return (high_uint64 << 32) + low_uint64;
 }
