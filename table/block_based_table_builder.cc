@@ -706,6 +706,7 @@ Status BlockBasedTableBuilder::Finish() {
         // blocks.
         if (ok()) {
           r->index_builder->AddIndexEntry(&r->last_key, &key, r->pending_handle);
+          std::cout << __func__ << " Add: " << r->pending_handle.offset() << " ;key: " << lekey << " ;block_num" << block_num << std::endl;
         }
       }
 
