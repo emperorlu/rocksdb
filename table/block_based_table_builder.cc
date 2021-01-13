@@ -740,20 +740,17 @@ Status BlockBasedTableBuilder::Finish() {
     } else {
       assert(false);
     }
-    if (ok()) {
-      r->index_builder->AddIndexEntry(&r->last_key, &key, r->pending_handle);
-    }
   }
 
   r->all_values.clear();
   Flush();
-
   assert(!r->closed);
   r->closed = true;
 
   // To make sure properties block is able to keep the accurate size of index
   // block, we will finish writing all index entries here and flush them
   // to storage after metaindex block is written.
+  empty_data_block = r->data_block.empty();
   if (ok() && !empty_data_block) {
     r->index_builder->AddIndexEntry(
         &r->last_key, nullptr /* no next data block */, r->pending_handle);
