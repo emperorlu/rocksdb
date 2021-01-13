@@ -795,13 +795,13 @@ Status BlockBasedTable::Open(const ImmutableCFOptions& ioptions,
 
   if (s.ok()) {
     // BlockIter iiter_on_stack;
-    auto iiter = new_table->NewIndexIterator(ReadOptions(), nullptr);
-    for (iiter->SeekToFirst(); iiter->Valid(); iiter->Next()) {
-      Slice handle_value = iiter->value();
-      BlockHandle handle;
-      handle.DecodeFrom(&handle_value);
-      rep->block_pos.push_back({handle.offset(),handle.size()});
-    }
+    // auto iiter = new_table->NewIndexIterator(ReadOptions(), nullptr);
+    // for (iiter->SeekToFirst(); iiter->Valid(); iiter->Next()) {
+    //   Slice handle_value = iiter->value();
+    //   BlockHandle handle;
+    //   handle.DecodeFrom(&handle_value);
+    //   rep->block_pos.push_back({handle.offset(),handle.size()});
+    // }
     *table_reader = std::move(new_table);
   }
 
