@@ -158,7 +158,8 @@ Status BuildTable(
     s = c_iter.status();
     if (!s.ok() || empty) {
       std::cout << " no finish! " << std::endl;
-      builder->Abandon();
+      s = builder->Finish();
+      // builder->Abandon();
     } else {
       s = builder->Finish();
     }
