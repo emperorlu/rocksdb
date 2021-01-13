@@ -794,14 +794,14 @@ Status BlockBasedTable::Open(const ImmutableCFOptions& ioptions,
   }
 
   if (s.ok()) {
-    // BlockIter iiter_on_stack;
-    // auto iiter = new_table->NewIndexIterator(ReadOptions(), nullptr);
-    // for (iiter->SeekToFirst(); iiter->Valid(); iiter->Next()) {
-    //   Slice handle_value = iiter->value();
-    //   BlockHandle handle;
-    //   handle.DecodeFrom(&handle_value);
-    //   rep->block_pos.push_back({handle.offset(),handle.size()});
-    // }
+    BlockIter iiter_on_stack;
+    auto iiter = new_table->NewIndexIterator(ReadOptions(), nullptr);
+    for (iiter->SeekToFirst(); iiter->Valid(); iiter->Next()) {
+      Slice handle_value = iiter->value();
+      BlockHandle handle;
+      handle.DecodeFrom(&handle_value);
+      rep->block_pos.push_back({handle.offset(),handle.size()});
+    }
     *table_reader = std::move(new_table);
   }
 
@@ -1678,15 +1678,15 @@ Status BlockBasedTable::Get(const ReadOptions& read_options, const Slice& key,
       } else {
         BlockIter biter;
         handle.DecodeFrom(&handle_value);
-        // uint64_t lekey = key.Touint64_t();
-        // auto value_get = rep_->learnedMod->get(lekey);
-        // int block_num = value_get / 4096;
+        uint64_t lekey = key.Touint64_t();
+        auto value_get = rep_->learnedMod->get(lekey);
+        int block_num = value_get / 4096;
 
-        // if (rep_->block_pos[block_num].first == handle.offset()){
-        //   std::cout << __func__ << " no find key: " << lekey << " ;block_num:" << block_num << std::endl;
-        // std::cout << __func__ << " handle_offset: " << handle.offset() << " ;handle_size: " << handle.size() << std::endl;
-        //   std::cout << __func__ << " ModelGet_offset: " << rep_->block_pos[block_num].first << " ;ModelGet_size: " << rep_->block_pos[block_num].second << std::endl;
-        // }
+        if (rep_->block_pos[block_num].first != handle.offset()){
+          std::cout << __func__ << " no find key: " << lekey << " ;block_num:" << block_num << std::endl;
+          std::cout << __func__ << " handle_offset: " << handle.offset() << " ;handle_size: " << handle.size() << std::endl;
+          std::cout << __func__ << " ModelGet_offset: " << rep_->block_pos[block_num].first << " ;ModelGet_size: " << rep_->block_pos[block_num].second << std::endl;
+        }
         NewDataBlockIterator(rep_, read_options, handle, &biter);
         // std::cout << __func__ << " NewDataBlockIterator over"  << std::endl;
         if (read_options.read_tier == kBlockCacheTier &&
