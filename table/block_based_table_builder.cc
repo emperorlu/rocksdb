@@ -395,7 +395,7 @@ void BlockBasedTableBuilder::Add(const Slice& key, const Slice& value) {
   r->all_values.push_back({key, value});
   r->_bytes += key.size();
   r->_bytes += value.size();
-  // Slice nkey (key.data(),8);
+  std::cout << __func__ << " key: " << key.ToString(true) << std::endl;
   uint64_t lekey = 0;
   // sscanf(nkey.data(), "%llu", &lekey);
   // memcpy(&lekey, nkey.data(), sizeof(lekey));
