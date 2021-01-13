@@ -1682,7 +1682,7 @@ Status BlockBasedTable::Get(const ReadOptions& read_options, const Slice& key,
         auto value_get = rep_->learnedMod->get(lekey);
         int block_num = value_get / 4096;
 
-        if (rep_->block_pos[block_num].first != handle.offset()){
+        if (rep_->block_pos[block_num].first == handle.offset()){
           std::cout << __func__ << " no find key: " << lekey << " ;block_num:" << block_num << std::endl;
           std::cout << __func__ << " handle_offset: " << handle.offset() << " ;handle_size: " << handle.size() << std::endl;
           std::cout << __func__ << " ModelGet_offset: " << rep_->block_pos[block_num].first << " ;ModelGet_size: " << rep_->block_pos[block_num].second << std::endl;
