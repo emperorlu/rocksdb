@@ -238,7 +238,7 @@ class BlockBasedTableBuilder::BlockBasedTablePropertiesCollector
 struct BlockBasedTableBuilder::Rep {
   // for model
   uint64_t _bytes = 0;
-  std::vector<std::pair<Slice, Slice>> all_values;
+  std::vector<std::pair<std::string, sttd::string>> all_values;
 
   const ImmutableCFOptions ioptions;
   const BlockBasedTableOptions table_options;
@@ -392,8 +392,8 @@ void BlockBasedTableBuilder::Add(const Slice& key, const Slice& value) {
   Rep* r = rep_;
   assert(!r->closed);
   if (!ok()) return;
-  std::cout << __func__ << " Add lekey: " << (void*)key.data() << std::endl;
-  r->all_values.push_back({key, value});
+  // std::cout << __func__ << " Add lekey: " << (void*)key.data() << std::endl;
+  r->all_values.push_back({key.ToString(), value.ToString()});
   r->_bytes += key.size();
   r->_bytes += value.size();
 
@@ -670,24 +670,24 @@ Status BlockBasedTableBuilder::Finish() {
 
   // Write data block
   int based = 0;
-  std::cout << __func__ << " Write data block: " << r->all_values.size() <<  std::endl;
-  for(unsigned i = 0; i < r->all_values.size(); i++){
-    std::cout << __func__ << " all_values: " << (void*)r->all_values[i].first.data() << std::endl;
-    std::cout << __func__ << " all_values: " << r->all_values[i].first.ToString(true) << std::endl;
-  }
+  // std::cout << __func__ << " Write data block: " << r->all_values.size() <<  std::endl;
+  // for(unsigned i = 0; i < r->all_values.size(); i++){
+  //   std::cout << __func__ << " all_values: " << r->all_values[i].first << std::endl;
+  // }
   for(auto& item: r->all_values){
-
-    uint64_t lekey = item.first.Touint64_t();
+    Slice key(item.first);
+    Slice value(item.second);
+    uint64_t lekey = key.Touint64_t();
     auto value_get = LearnedMod->get(lekey);
     int block_num = value_get / 4096;
-    std::cout << __func__ << " item.first: " << item.first.ToString(true) << std::endl;
+    std::cout << __func__ << " item.first: " << key.ToString(true) << std::endl;
     std::cout << __func__ << " lekey: " << lekey << std::endl;
     std::cout << __func__ << " block_num: " << block_num << std::endl;
 
-    ValueType value_type = ExtractValueType(item.first);
+    ValueType value_type = ExtractValueType(key);
     if (IsValueType(value_type)) {
       if (r->props.num_entries > 0) {
-        assert(r->internal_comparator.Compare(item.first, Slice(r->last_key)) > 0);
+        assert(r->internal_comparator.Compare(key, Slice(r->last_key)) > 0);
       }
 
       // auto should_flush = r->flush_block_policy->Update(item.first, item.second);
@@ -705,34 +705,34 @@ Status BlockBasedTableBuilder::Finish() {
         // entries in the first block and < all entries in subsequent
         // blocks.
         if (ok()) {
-          r->index_builder->AddIndexEntry(&r->last_key, &item.first, r->pending_handle);
+          r->index_builder->AddIndexEntry(&r->last_key, &key, r->pending_handle);
         }
       }
 
       // Note: PartitionedFilterBlockBuilder requires key being added to filter
       // builder after being added to index builder.
       if (r->filter_builder != nullptr) {
-        r->filter_builder->Add(ExtractUserKey(item.first));
+        r->filter_builder->Add(ExtractUserKey(key));
       }
 
-      r->last_key.assign(item.first.data(), item.first.size());
-      r->data_block.Add(item.first, item.second);
+      r->last_key.assign(key.data(), key.size());
+      r->data_block.Add(key, value);
       r->props.num_entries++;
-      r->props.raw_key_size += item.first.size();
-      r->props.raw_value_size += item.second.size();
+      r->props.raw_key_size += key.size();
+      r->props.raw_value_size += value.size();
 
-      r->index_builder->OnKeyAdded(item.first);
-      NotifyCollectTableCollectorsOnAdd(item.first, item.second, r->offset,
+      r->index_builder->OnKeyAdded(key);
+      NotifyCollectTableCollectorsOnAdd(key, value, r->offset,
                                         r->table_properties_collectors,
                                         r->ioptions.info_log);
 
     } else if (value_type == kTypeRangeDeletion) {
       // TODO(wanning&andrewkr) add num_tomestone to table properties
-      r->range_del_block.Add(item.first, item.second);
+      r->range_del_block.Add(key, value);
       ++r->props.num_entries;
-      r->props.raw_key_size += item.first.size();
-      r->props.raw_value_size += item.second.size();
-      NotifyCollectTableCollectorsOnAdd(item.first, item.second, r->offset,
+      r->props.raw_key_size += key.size();
+      r->props.raw_value_size += value.size();
+      NotifyCollectTableCollectorsOnAdd(key, value, r->offset,
                                         r->table_properties_collectors,
                                         r->ioptions.info_log);
     } else {
