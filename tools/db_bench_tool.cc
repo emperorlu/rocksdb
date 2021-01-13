@@ -31,7 +31,7 @@
 #include <mutex>
 #include <thread>
 #include <unordered_map>
-
+#include <iostream>
 #include "db/db_impl.h"
 #include "db/version_set.h"
 #include "hdfs/env_hdfs.h"
