@@ -675,8 +675,8 @@ Status BlockBasedTableBuilder::Finish() {
     uint64_t lekey = item.first.Touint64_t();
     auto value_get = LearnedMod->get(lekey);
     int block_num = value_get / 4096;
-    std::cout << __func__ << " lekey: " << lekey << std::endl;
-    std::cout << __func__ << " block_num: " << block_num << std::endl;
+    // std::cout << __func__ << " lekey: " << lekey << std::endl;
+    // std::cout << __func__ << " block_num: " << block_num << std::endl;
 
     ValueType value_type = ExtractValueType(item.first);
     if (IsValueType(value_type)) {
