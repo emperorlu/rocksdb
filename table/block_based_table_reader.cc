@@ -1677,7 +1677,7 @@ Status BlockBasedTable::Get(const ReadOptions& read_options, const Slice& key,
         break;
       } else {
         BlockIter biter;
-        
+        handle.DecodeFrom(&handle_value);
         // uint64_t lekey = key.Touint64_t();
         // auto value_get = rep_->learnedMod->get(lekey);
         // int block_num = value_get / 4096;
