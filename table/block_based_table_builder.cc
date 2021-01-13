@@ -660,7 +660,7 @@ Status BlockBasedTableBuilder::InsertBlockInCache(const Slice& block_contents,
 
 Status BlockBasedTableBuilder::Finish() {
   Rep* r = rep_;
-  std::cout << __func__ << " Finish " <<  std::endl;
+  // std::cout << __func__ << " Finish " <<  std::endl;
   bool empty_data_block = r->data_block.empty();
 
   LearnedMod->finish_insert();
