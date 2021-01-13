@@ -392,14 +392,13 @@ void BlockBasedTableBuilder::Add(const Slice& key, const Slice& value) {
   Rep* r = rep_;
   assert(!r->closed);
   if (!ok()) return;
-
+  std::cout << __func__ << " Add lekey: " << (void*)key.data() << std::endl;
   r->all_values.push_back({key, value});
   r->_bytes += key.size();
   r->_bytes += value.size();
 
   uint64_t lekey = key.Touint64_t();
-
-  std::cout << __func__ << " after lekey: " << lekey << std::endl;
+  // std::cout << __func__ << " after lekey: " << lekey << std::endl;
   LearnedMod->insert(lekey,r->_bytes);
 
   // ValueType value_type = ExtractValueType(key);
