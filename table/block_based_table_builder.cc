@@ -238,7 +238,7 @@ class BlockBasedTableBuilder::BlockBasedTablePropertiesCollector
 struct BlockBasedTableBuilder::Rep {
   // for model
   uint64_t _bytes = 0;
-  std::vector<std::pair<std::string, sttd::string>> all_values;
+  std::vector<std::pair<std::string, std::string>> all_values;
 
   const ImmutableCFOptions ioptions;
   const BlockBasedTableOptions table_options;
