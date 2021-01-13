@@ -12,7 +12,7 @@
 #include <algorithm>
 #include <deque>
 #include <vector>
-
+#include <iostream>
 #include "db/compaction_iterator.h"
 #include "db/dbformat.h"
 #include "db/event_helpers.h"
@@ -157,6 +157,7 @@ Status BuildTable(
     bool empty = builder->NumEntries() == 0;
     s = c_iter.status();
     if (!s.ok() || empty) {
+      std::cout << " no finish! " << std::endl;
       builder->Abandon();
     } else {
       s = builder->Finish();
