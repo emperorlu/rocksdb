@@ -740,10 +740,14 @@ Status BlockBasedTableBuilder::Finish() {
     } else {
       assert(false);
     }
+    if (ok()) {
+      r->index_builder->AddIndexEntry(&r->last_key, &key, r->pending_handle);
+    }
   }
 
   r->all_values.clear();
   Flush();
+
   assert(!r->closed);
   r->closed = true;
 
