@@ -91,7 +91,7 @@ class BlockBasedTableBuilder : public TableBuilder {
   // and then write the compressed block contents to file.
   void WriteBlock(BlockBuilder* block, BlockHandle* handle, bool is_data_block);
   void WriteLearnBlock(BlockHandle* handle);
-
+  uint64_t reversebytes_uint64t(uint64_t value);
   // Compress and write block content to the file.
   void WriteBlock(const Slice& block_contents, BlockHandle* handle,
                   bool is_data_block);

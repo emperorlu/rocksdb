@@ -388,6 +388,12 @@ BlockBasedTableBuilder::~BlockBasedTableBuilder() {
   delete LearnedMod;
 }
 
+uint64_t BlockBasedTableBuilder::reversebytes_uint64t(uint64_t value){
+    uint32_t high_uint64 = uint64_t(reversebytes_uint32t(uint32_t(value)));         
+    uint64_t low_uint64 = (uint64_t)reversebytes_uint32t(uint32_t(value >> 32));    
+    return (high_uint64 << 32) + low_uint64;
+}
+
 void BlockBasedTableBuilder::Add(const Slice& key, const Slice& value) {
   Rep* r = rep_;
   assert(!r->closed);
@@ -398,9 +404,10 @@ void BlockBasedTableBuilder::Add(const Slice& key, const Slice& value) {
   Slice nkey(key.data(), 8);
   std::cout << __func__ << " nkey: " << nkey.ToString(true) << std::endl;
   uint64_t lekey = 0;
-  sscanf(nkey.data(), "%8lu", &lekey);
+  // sscanf(nkey.data(), "%8lu", &lekey);
   // memcpy(&lekey, nkey.data(), sizeof(lekey));
-  // memcpy(&lekey, nkey.data(), sizeof(lekey));
+  memcpy(&lekey, nkey.data(), sizeof(lekey));
+  lekey =  reversebytes_uint64t(lekey);
   std::cout << __func__ << " lekey: " << lekey << std::endl;
   LearnedMod->insert(lekey,r->_bytes);
 
