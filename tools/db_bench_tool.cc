@@ -3426,7 +3426,7 @@ void VerifyDBFromDB(std::string& truth_db_name) {
         int64_t rand_num = key_gens[id]->Next();
         std::cout << __func__ << " rand_num: " << rand_num << std::endl;
         GenerateKeyFromInt(rand_num, FLAGS_num, &key);
-        std::cout << __func__ << " key: " << key.ToString() << std::endl;
+        std::cout << __func__ << " key: " << key.DecodeHex() << std::endl;
         if (use_blob_db_) {
 #ifndef ROCKSDB_LITE
           Slice val = gen.Generate(value_size_);
