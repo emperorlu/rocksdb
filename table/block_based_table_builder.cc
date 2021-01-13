@@ -398,9 +398,9 @@ void BlockBasedTableBuilder::Add(const Slice& key, const Slice& value) {
   Slice nkey(key.data(), 8);
   std::cout << __func__ << " nkey: " << nkey.ToString(true) << std::endl;
   uint64_t lekey = 0;
-  // sscanf(nkey.data(), "%llu", &lekey);
+  sscanf(nkey.data(), "%8llu", &lekey);
   // memcpy(&lekey, nkey.data(), sizeof(lekey));
-  memcpy(&lekey, nkey.data(), sizeof(lekey));
+  // memcpy(&lekey, nkey.data(), sizeof(lekey));
   std::cout << __func__ << " lekey: " << lekey << std::endl;
   LearnedMod->insert(lekey,r->_bytes);
 
