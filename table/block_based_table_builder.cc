@@ -673,7 +673,7 @@ Status BlockBasedTableBuilder::Finish() {
   int based = 0;
   std::cout << __func__ << " Write data block: " << r->all_values.size() <<  std::endl;
   for(int i = 0; i < r->all_values.size(); i++){
-    std::cout << __func__ << " all_values: " << all_values[i].ToString(true) << std::endl;
+    std::cout << __func__ << " all_values: " << r->all_values[i].ToString(true) << std::endl;
   }
   for(auto& item: r->all_values){
 
