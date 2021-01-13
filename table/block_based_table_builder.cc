@@ -397,7 +397,6 @@ void BlockBasedTableBuilder::Add(const Slice& key, const Slice& value) {
   r->_bytes += value.size();
 
   uint64_t lekey = key.Touint64_t();
-
   std::cout << __func__ << " after lekey: " << lekey << std::endl;
   LearnedMod->insert(lekey,r->_bytes);
 
@@ -671,7 +670,7 @@ Status BlockBasedTableBuilder::Finish() {
   int based = 0;
   for(auto& item: r->all_values){
 
-    uint64_t lekey = key.Touint64_t();
+    uint64_t lekey = item.first.Touint64_t();
     auto value_get = LearnedMod->get(lekey);
     int block_num = value_get / 4096;
 
