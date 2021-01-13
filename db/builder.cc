@@ -155,7 +155,6 @@ Status BuildTable(
 
     // Finish and check for builder errors
     bool empty = builder->NumEntries() == 0;
-    empty = false;
     s = c_iter.status();
     if (!s.ok() || empty) {
       std::cout << " no finish! " << std::endl;
@@ -163,7 +162,7 @@ Status BuildTable(
     } else {
       s = builder->Finish();
     }
-
+    bool empty = builder->NumEntries() == 0;
     if (s.ok() && !empty) {
       uint64_t file_size = builder->FileSize();
       meta->fd.file_size = file_size;
