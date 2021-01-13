@@ -1746,11 +1746,7 @@ Status BlockBasedTable::ModelGet(const ReadOptions& read_options, const Slice& k
     // if (iiter != &iiter_on_stack) {
     //   iiter_unique_ptr.reset(iiter);
     // }
-    // Slice nkey (key.data(),8);
-    uint64_t lekey = 0;
-    // sscanf(nkey.data(), "%llu", &lekey);
-    // memcpy(&lekey, nkey.data(), sizeof(lekey));
-    memcpy(&lekey, key.data(), key.size());
+    uint64_t lekey = key.Touint64_t();
     auto value_get = rep_->learnedMod->get(lekey);
     int block_num = value_get / 4096;
 
