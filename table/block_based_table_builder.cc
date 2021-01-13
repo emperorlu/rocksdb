@@ -388,6 +388,11 @@ BlockBasedTableBuilder::~BlockBasedTableBuilder() {
   delete LearnedMod;
 }
 
+uint32_t BlockBasedTableBuilder::reversebytes_uint32t(uint32_t value){
+    return (value & 0x000000FFU) << 24 | (value & 0x0000FF00U) << 8 | 
+        (value & 0x00FF0000U) >> 8 | (value & 0xFF000000U) >> 24; 
+}
+
 uint64_t BlockBasedTableBuilder::reversebytes_uint64t(uint64_t value){
     uint32_t high_uint64 = uint64_t(reversebytes_uint32t(uint32_t(value)));         
     uint64_t low_uint64 = (uint64_t)reversebytes_uint32t(uint32_t(value >> 32));    
