@@ -129,6 +129,17 @@ int fromHex(char c) {
   return c - 'A' + 10;
 }
 
+uint32_t reversebytes_uint32t(uint32_t value){
+    return (value & 0x000000FFU) << 24 | (value & 0x0000FF00U) << 8 | 
+        (value & 0x00FF0000U) >> 8 | (value & 0xFF000000U) >> 24; 
+}
+
+uint64_t reversebytes_uint64t(uint64_t value){
+    uint64_t high_uint64 = uint64_t(reversebytes_uint32t(uint32_t(value)));         
+    uint64_t low_uint64 = (uint64_t)reversebytes_uint32t(uint32_t(value >> 32));    
+    return (high_uint64 << 32) + low_uint64;
+}
+
 Slice::Slice(const SliceParts& parts, std::string* buf) {
   size_t length = 0;
   for (int i = 0; i < parts.num_parts; ++i) {
@@ -141,6 +152,14 @@ Slice::Slice(const SliceParts& parts, std::string* buf) {
   }
   data_ = buf->data();
   size_ = buf->size();
+}
+
+uint64_t Slice::Touint64_t () const{
+  Slice nkey(data_, 8);
+  uint64_t lekey = 0;
+  memcpy(&lekey, nkey.data(), sizeof(lekey));
+  lekey =  reversebytes_uint64t(lekey);
+  return lekey;
 }
 
 // Return a string that contains the copy of the referenced data.
