@@ -12,7 +12,7 @@
 #include "db/dbformat.h"
 #include "db/version_edit.h"
 #include "util/filename.h"
-
+#include <iostream>
 #include "monitoring/perf_context_imp.h"
 #include "rocksdb/statistics.h"
 #include "table/get_context.h"
@@ -333,8 +333,15 @@ Status TableCache::Get(const ReadOptions& options,
     }
     if (s.ok()) {
       get_context->SetReplayLog(row_cache_entry);  // nullptr if no cache.
-      // s = t->Get(options, k, get_context, skip_filters);
-      s = t->ModelGet(options, k, get_context, skip_filters);
+      if (options.is_model){
+        s = t->ModelGet(options, k, get_context, skip_filters);
+        std::cout << "model get"  << std::endl;
+      }
+      else{
+        s = t->Get(options, k, get_context, skip_filters);
+        std::cout << "not model get"  << std::endl;
+      }
+        
       get_context->SetReplayLog(nullptr);
     } else if (options.read_tier == kBlockCacheTier && s.IsIncomplete()) {
       // Couldn't find Table in cache but treat as kFound if no_io set

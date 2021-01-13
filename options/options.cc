@@ -581,7 +581,8 @@ DBOptions* DBOptions::IncreaseParallelism(int total_threads) {
 #endif  // !ROCKSDB_LITE
 
 ReadOptions::ReadOptions()
-    : verify_checksums(true),
+    : is_model(false),
+      verify_checksums(true),
       fill_cache(true),
       snapshot(nullptr),
       iterate_upper_bound(nullptr),
@@ -597,7 +598,25 @@ ReadOptions::ReadOptions()
       max_skippable_internal_keys(0) {}
 
 ReadOptions::ReadOptions(bool cksum, bool cache)
-    : verify_checksums(cksum),
+    : is_model(false),
+      verify_checksums(cksum),
+      fill_cache(cache),
+      snapshot(nullptr),
+      iterate_upper_bound(nullptr),
+      read_tier(kReadAllTier),
+      tailing(false),
+      managed(false),
+      total_order_seek(false),
+      prefix_same_as_start(false),
+      pin_data(false),
+      background_purge_on_iterator_cleanup(false),
+      readahead_size(0),
+      ignore_range_deletions(false),
+      max_skippable_internal_keys(0) {}
+
+ReadOptions::ReadOptions(bool cksum, bool cache, bool model)
+    : is_model(model),
+      verify_checksums(cksum),
       fill_cache(cache),
       snapshot(nullptr),
       iterate_upper_bound(nullptr),

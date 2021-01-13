@@ -275,6 +275,8 @@ DEFINE_bool(enable_numa, false,
             "CPU and memory of same node. Use \"$numactl --hardware\" command "
             "to see NUMA memory architecture.");
 
+DEFINE_bool(is_model, false, "is_model")
+
 DEFINE_int64(db_write_buffer_size, rocksdb::Options().db_write_buffer_size,
              "Number of bytes to buffer in all memtables before compacting");
 
@@ -3813,7 +3815,7 @@ void VerifyDBFromDB(std::string& truth_db_name) {
   }
 
   void ReadSequential(ThreadState* thread, DB* db) {
-    ReadOptions options(FLAGS_verify_checksum, true);
+    ReadOptions options(FLAGS_verify_checksum, true, FLAGS_is_model);
     options.tailing = FLAGS_use_tailing_iterator;
 
     Iterator* iter = db->NewIterator(options);
@@ -3849,7 +3851,7 @@ void VerifyDBFromDB(std::string& truth_db_name) {
   }
 
   void ReadReverse(ThreadState* thread, DB* db) {
-    Iterator* iter = db->NewIterator(ReadOptions(FLAGS_verify_checksum, true));
+    Iterator* iter = db->NewIterator(ReadOptions(FLAGS_verify_checksum, true, FLAGS_is_model));
     int64_t i = 0;
     int64_t bytes = 0;
     for (iter->SeekToLast(); i < reads_ && iter->Valid(); iter->Prev()) {
@@ -3870,7 +3872,7 @@ void VerifyDBFromDB(std::string& truth_db_name) {
     int64_t read = 0;
     int64_t found = 0;
     int64_t nonexist = 0;
-    ReadOptions options(FLAGS_verify_checksum, true);
+    ReadOptions options(FLAGS_verify_checksum, true, FLAGS_is_model);
     std::unique_ptr<const char[]> key_guard;
     Slice key = AllocateKey(&key_guard);
     std::string value;
@@ -3944,7 +3946,7 @@ void VerifyDBFromDB(std::string& truth_db_name) {
     int64_t read = 0;
     int64_t found = 0;
     int64_t bytes = 0;
-    ReadOptions options(FLAGS_verify_checksum, true);
+    ReadOptions options(FLAGS_verify_checksum, true, FLAGS_is_model);
     std::unique_ptr<const char[]> key_guard;
     Slice key = AllocateKey(&key_guard);
     std::string value;
@@ -4010,7 +4012,7 @@ void VerifyDBFromDB(std::string& truth_db_name) {
     int64_t read = 0;
     int64_t num_multireads = 0;
     int64_t found = 0;
-    ReadOptions options(FLAGS_verify_checksum, true);
+    ReadOptions options(FLAGS_verify_checksum, true, FLAGS_is_model);
     std::vector<Slice> keys;
     std::vector<std::unique_ptr<const char[]> > key_guards;
     std::vector<std::string> values(entries_per_batch_);
@@ -4055,7 +4057,7 @@ void VerifyDBFromDB(std::string& truth_db_name) {
 
   void IteratorCreation(ThreadState* thread) {
     Duration duration(FLAGS_duration, reads_);
-    ReadOptions options(FLAGS_verify_checksum, true);
+    ReadOptions options(FLAGS_verify_checksum, true, FLAGS_is_model);
     while (!duration.Done(1)) {
       DB* db = SelectDB(thread);
       Iterator* iter = db->NewIterator(options);
@@ -4076,7 +4078,7 @@ void VerifyDBFromDB(std::string& truth_db_name) {
     int64_t read = 0;
     int64_t found = 0;
     int64_t bytes = 0;
-    ReadOptions options(FLAGS_verify_checksum, true);
+    ReadOptions options(FLAGS_verify_checksum, true, FLAGS_is_model);
     options.tailing = FLAGS_use_tailing_iterator;
 
     Iterator* single_iter = nullptr;
@@ -4379,7 +4381,7 @@ void VerifyDBFromDB(std::string& truth_db_name) {
   //     FLAGS_numdistinct distinct keys instead of FLAGS_num distinct keys.
   // (d) Does not have a MultiGet option.
   void RandomWithVerify(ThreadState* thread) {
-    ReadOptions options(FLAGS_verify_checksum, true);
+    ReadOptions options(FLAGS_verify_checksum, true, FLAGS_is_model);
     RandomGenerator gen;
     std::string value;
     int64_t found = 0;
@@ -4450,7 +4452,7 @@ void VerifyDBFromDB(std::string& truth_db_name) {
   // This is different from ReadWhileWriting because it does not use
   // an extra thread.
   void ReadRandomWriteRandom(ThreadState* thread) {
-    ReadOptions options(FLAGS_verify_checksum, true);
+    ReadOptions options(FLAGS_verify_checksum, true, FLAGS_is_model);
     RandomGenerator gen;
     std::string value;
     int64_t found = 0;
@@ -4508,7 +4510,7 @@ void VerifyDBFromDB(std::string& truth_db_name) {
   //
   // Read-modify-write for random keys
   void UpdateRandom(ThreadState* thread) {
-    ReadOptions options(FLAGS_verify_checksum, true);
+    ReadOptions options(FLAGS_verify_checksum, true, FLAGS_is_model);
     RandomGenerator gen;
     std::string value;
     int64_t found = 0;
@@ -4551,7 +4553,7 @@ void VerifyDBFromDB(std::string& truth_db_name) {
   // Each operation causes the key grow by value_size (simulating an append).
   // Generally used for benchmarking against merges of similar type
   void AppendRandom(ThreadState* thread) {
-    ReadOptions options(FLAGS_verify_checksum, true);
+    ReadOptions options(FLAGS_verify_checksum, true, FLAGS_is_model);
     RandomGenerator gen;
     std::string value;
     int64_t found = 0;
@@ -4649,7 +4651,7 @@ void VerifyDBFromDB(std::string& truth_db_name) {
   // As with MergeRandom, the merge operator to use should be defined by
   // FLAGS_merge_operator.
   void ReadRandomMergeRandom(ThreadState* thread) {
-    ReadOptions options(FLAGS_verify_checksum, true);
+    ReadOptions options(FLAGS_verify_checksum, true, FLAGS_is_model);
     RandomGenerator gen;
     std::string value;
     int64_t num_hits = 0;
@@ -4708,7 +4710,7 @@ void VerifyDBFromDB(std::string& truth_db_name) {
 
     DB* db = SelectDB(thread);
     std::unique_ptr<Iterator> iter(
-      db->NewIterator(ReadOptions(FLAGS_verify_checksum, true)));
+      db->NewIterator(ReadOptions(FLAGS_verify_checksum, true, FLAGS_is_model)));
 
     std::unique_ptr<const char[]> key_guard;
     Slice key = AllocateKey(&key_guard);
@@ -4749,9 +4751,9 @@ void VerifyDBFromDB(std::string& truth_db_name) {
   // RandomTransactionVerify() will then validate the correctness of the results
   // by checking if the sum of all keys in each set is the same.
   void RandomTransaction(ThreadState* thread) {
-    ReadOptions options(FLAGS_verify_checksum, true);
+    ReadOptions options(FLAGS_verify_checksum, true, FLAGS_is_model);
     Duration duration(FLAGS_duration, readwrites_);
-    ReadOptions read_options(FLAGS_verify_checksum, true);
+    ReadOptions read_options(FLAGS_verify_checksum, true, FLAGS_is_model);
     uint16_t num_prefix_ranges = static_cast<uint16_t>(FLAGS_transaction_sets);
     uint64_t transactions_done = 0;
 
@@ -4896,7 +4898,7 @@ void VerifyDBFromDB(std::string& truth_db_name) {
   }
 
   void TimeSeriesReadOrDelete(ThreadState* thread, bool do_deletion) {
-    ReadOptions options(FLAGS_verify_checksum, true);
+    ReadOptions options(FLAGS_verify_checksum, true, FLAGS_is_model);
     int64_t read = 0;
     int64_t found = 0;
     int64_t bytes = 0;

@@ -188,6 +188,8 @@ struct ColumnFamilyOptions : public AdvancedColumnFamilyOptions {
   // Dynamically changeable through SetOptions() API
   size_t write_buffer_size = 64 << 20;
 
+  // bool is_model = false;
+
   // Compress blocks using the specified compression algorithm.  This
   // parameter can be changed dynamically.
   //
@@ -902,6 +904,9 @@ enum ReadTier {
 
 // Options that control read operations
 struct ReadOptions {
+  // use model?
+  bool is_model;
+
   // If true, all data read from underlying storage will be
   // verified against corresponding checksums.
   // Default: true
@@ -1010,6 +1015,7 @@ struct ReadOptions {
 
   ReadOptions();
   ReadOptions(bool cksum, bool cache);
+  ReadOptions(bool cksum, bool cache, bool model);
 };
 
 // Options that control write operations
