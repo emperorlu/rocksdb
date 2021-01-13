@@ -335,11 +335,11 @@ Status TableCache::Get(const ReadOptions& options,
       get_context->SetReplayLog(row_cache_entry);  // nullptr if no cache.
       if (options.is_model){
         s = t->ModelGet(options, k, get_context, skip_filters);
-        std::cout << "model get"  << std::endl;
+        // std::cout << "model get"  << std::endl;
       }
       else{
         s = t->Get(options, k, get_context, skip_filters);
-        std::cout << "not model get"  << std::endl;
+        // std::cout << "not model get"  << std::endl;
       }
         
       get_context->SetReplayLog(nullptr);
