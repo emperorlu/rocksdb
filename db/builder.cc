@@ -154,9 +154,10 @@ Status BuildTable(
                                 nullptr /* upper_bound */, meta);
 
     // Finish and check for builder errors
-    bool empty = builder->NumEntries() == 1;
+    bool empty = builder->NumEntries() == 0;
+    empty = false;
     s = c_iter.status();
-    if (!s.ok() && empty) {
+    if (!s.ok() || empty) {
       std::cout << " no finish! " << std::endl;
       builder->Abandon();
     } else {
