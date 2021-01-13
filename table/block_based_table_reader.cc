@@ -1639,7 +1639,7 @@ bool BlockBasedTable::FullFilterKeyMayMatch(const ReadOptions& read_options,
 Status BlockBasedTable::Get(const ReadOptions& read_options, const Slice& key,
                             GetContext* get_context, bool skip_filters) {
   Status s;
-  std::cout << " begin read! " << std::endl;
+  // std::cout << " begin read! " << std::endl;
   const bool no_io = read_options.read_tier == kBlockCacheTier;
   CachableEntry<FilterBlockReader> filter_entry;
   if (!skip_filters) {
@@ -1688,7 +1688,7 @@ Status BlockBasedTable::Get(const ReadOptions& read_options, const Slice& key,
         //   std::cout << __func__ << " ModelGet_offset: " << rep_->block_pos[block_num].first << " ;ModelGet_size: " << rep_->block_pos[block_num].second << std::endl;
         // }
         NewDataBlockIterator(rep_, read_options, handle, &biter);
-        std::cout << __func__ << " NewDataBlockIterator over"  << std::endl;
+        // std::cout << __func__ << " NewDataBlockIterator over"  << std::endl;
         if (read_options.read_tier == kBlockCacheTier &&
             biter.status().IsIncomplete()) {
           // couldn't get block from block_cache
