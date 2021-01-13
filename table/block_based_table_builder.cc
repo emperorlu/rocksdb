@@ -668,6 +668,7 @@ Status BlockBasedTableBuilder::Finish() {
 
   // Write data block
   int based = 0;
+  std::cout << __func__ << " Write data block: " << all_values.size() <<  std::endl;
   for(auto& item: r->all_values){
 
     uint64_t lekey = item.first.Touint64_t();
