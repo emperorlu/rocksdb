@@ -12,6 +12,7 @@
 #include "monitoring/perf_context_imp.h"
 #include "rmi.h"
 using namespace std;
+using namespace rocksdb;
 #if !defined(LEARNED_INDEX_H)
 #define LEARNED_INDEX_H
 
