@@ -9,7 +9,7 @@
 #include <string>
 #include <utility>
 #include <vector>
-
+#include "monitoring/perf_context_imp.h"
 #include "rmi.h"
 using namespace std;
 #if !defined(LEARNED_INDEX_H)
@@ -167,6 +167,7 @@ class LearnedRangeIndexSingleKey {
   }
 
   Val_T get(const double key) {
+    PERF_TIMER_GUARD(block_seek_nanos);
     learned_addr_t value;
     rmi.predict_pos(key, value);
     return value;
