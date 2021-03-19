@@ -13,6 +13,7 @@
 
 using namespace rocksdb;
 
+
 std::string kDBPath = "/mnt/ssd";
 
 int main() {
